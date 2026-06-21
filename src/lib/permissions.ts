@@ -1,4 +1,5 @@
 import { UserRole } from "@/generated/prisma";
+import { isAdminRole as checkAdminRole } from "@/lib/roles";
 
 export type Permission =
   | "dashboard.view"
@@ -77,11 +78,7 @@ export function canAccessAdmin(role: UserRole): boolean {
 }
 
 export function isAdminRole(role: UserRole): boolean {
-  return (
-    role === UserRole.SUPER_ADMIN ||
-    role === UserRole.ADMIN ||
-    role === UserRole.EDITOR
-  );
+  return checkAdminRole(role);
 }
 
 export const ADMIN_ROLES: UserRole[] = [
