@@ -10,6 +10,7 @@ export const adminNavItems: AdminNavItem[] = [
   { labelAr: "لوحة التحكم", labelEn: "Dashboard", segment: "" },
   { labelAr: "الصفحة الرئيسية", labelEn: "Homepage", segment: "homepage" },
   { labelAr: "المعلمون", labelEn: "Teachers", segment: Routes.TEACHERS },
+  { labelAr: "الخريجون", labelEn: "Graduates", segment: Routes.GRADUATES },
   { labelAr: "الإعلانات", labelEn: "Announcements", segment: Routes.ANNOUNCEMENTS },
   { labelAr: "المقالات", labelEn: "Articles", segment: "articles" },
   { labelAr: "الفعاليات", labelEn: "Events", segment: "events" },

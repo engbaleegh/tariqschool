@@ -2,8 +2,9 @@
 
 import { db } from "@/lib/prisma";
 import { SETTING_KEYS } from "@/constants/site";
-import { storeUploadedFile } from "@/lib/storage";
+import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType } from "@/lib/storage";
 import { setLocalSetting } from "@/lib/local-settings";
+import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
 
 export type HeroCoverActionState = {
@@ -17,6 +18,14 @@ export async function updateHeroCover(
   formData: FormData
 ): Promise<HeroCoverActionState> {
   const locale = String(formData.get("locale") ?? "ar");
+  const isAr = locale === "ar";
+
+  try {
+    await assertAdminSession();
+  } catch {
+    return { ok: false, error: isAr ? "غير مصرح" : "Unauthorized" };
+  }
+
   const file = formData.get("coverImage") as File | null;
   const existingUrl = String(formData.get("existingUrl") ?? "").trim();
 
@@ -24,19 +33,23 @@ export async function updateHeroCover(
     let imageUrl = existingUrl || null;
 
     if (file && file.size > 0) {
-      if (file.size > 10 * 1024 * 1024) {
+      const mime = resolveMimeType(file);
+      if (!isAllowedImage(mime)) {
         return {
           ok: false,
-          error: locale === "ar" ? "حجم الصورة يجب أن يكون أقل من 10 ميجابايت" : "Image must be under 10MB",
+          error: isAr
+            ? "الصيغ المدعومة: JPG, JPEG, PNG, WEBP"
+            : "Supported formats: JPG, JPEG, PNG, WEBP",
         };
       }
-      imageUrl = await storeUploadedFile(file, "covers");
+      const stored = await storeFileDetailed(file, "covers");
+      imageUrl = stored.url;
     }
 
     if (!imageUrl) {
       return {
         ok: false,
-        error: locale === "ar" ? "يرجى اختيار صورة للغلاف" : "Please select a cover image",
+        error: isAr ? "يرجى اختيار صورة للغلاف" : "Please select a cover image",
       };
     }
 
@@ -60,12 +73,14 @@ export async function updateHeroCover(
     return { ok: true, imageUrl };
   } catch (error) {
     console.error("updateHeroCover failed:", error);
+    if (error instanceof StorageError) {
+      return { ok: false, error: error.message };
+    }
     return {
       ok: false,
-      error:
-        locale === "ar"
-          ? "تعذر حفظ صورة الغلاف. حاول مرة أخرى."
-          : "Could not save the cover image. Please try again.",
+      error: isAr
+        ? "تعذر حفظ صورة الغلاف. حاول مرة أخرى."
+        : "Could not save the cover image. Please try again.",
     };
   }
 }

@@ -110,6 +110,24 @@ model HomepageSection {
   updatedAt DateTime @updatedAt
 }
 
+// ─── Graduates ──────────────────────────────────────────────────────────────
+
+model Graduate {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  photo       String?
+  biography   String?  @db.Text
+  biographyAr String?  @db.Text
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}
+
 // ─── Teachers ───────────────────────────────────────────────────────────────
 
 model Teacher {

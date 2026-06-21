@@ -142,6 +142,23 @@ function mapTeachers(
   }));
 }
 
+export async function getActiveGraduates() {
+  return safeQuery(async () => {
+    const rows = await db.graduate.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      nameAr: row.nameAr ?? row.name,
+      biography: row.biography,
+      biographyAr: row.biographyAr,
+      photo: row.photo,
+    }));
+  }, []);
+}
+
 export async function getGalleryAlbums() {
   return safeQuery(async () => {
     const rows = await db.galleryAlbum.findMany({

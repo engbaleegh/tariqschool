@@ -5,6 +5,7 @@ import type { Locale } from "@/i18n.config";
 import { Routes } from "@/constants/enums";
 import { db } from "@/lib/prisma";
 import { getLocalizedField } from "@/lib/utils";
+import Link from "next/link";
 
 type PageProps = { params: Promise<{ locale: Locale }> };
 
@@ -46,15 +47,28 @@ export default async function AdminResultsPage({ params }: PageProps) {
         action={{ label: isAr ? "رفع نتيجة" : "Upload result", href: `${base}/new` }}
       />
       <DataTable
+        locale={locale}
         columns={[
-          { key: "title", header: isAr ? "العنوان" : "Title" },
-          { key: "category", header: isAr ? "التصنيف" : "Category" },
-          { key: "year", header: isAr ? "العام الدراسي" : "Academic Year" },
-          { key: "status", header: isAr ? "الحالة" : "Status" },
+          { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[32%]" },
+          { key: "category", header: isAr ? "التصنيف" : "Category", className: "w-[18%]" },
+          { key: "year", header: isAr ? "العام الدراسي" : "Academic Year", className: "w-[14%]" },
+          { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[12%]" },
           {
-            key: "id",
+            key: "actions",
             header: isAr ? "إجراءات" : "Actions",
-            render: (row) => <DeleteResultButton id={row.id as string} locale={locale} />,
+            className: "w-[24%]",
+            sortable: false,
+            render: (row) => (
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href={`${base}/${row.id}/edit`}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                >
+                  {isAr ? "تعديل" : "Edit"}
+                </Link>
+                <DeleteResultButton id={row.id as string} locale={locale} />
+              </div>
+            ),
           },
         ]}
         data={rows}

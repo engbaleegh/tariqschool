@@ -21,9 +21,10 @@ import {
   schoolInfo,
 } from "@/constants/public-content";
 import { Routes } from "@/constants/enums";
-import { getPublishedAnnouncements, getPublishedEvents, getPublishedResults } from "@/lib/db-content";
+import { getPublishedAnnouncements, getPublishedEvents, getPublishedResults, getActiveGraduates } from "@/lib/db-content";
 import { getHeroCoverImage } from "@/lib/school-settings";
 import { HomeResultsSection } from "@/components/public/ResultsList";
+import { HomeGraduatesSection } from "@/components/public/HomeGraduatesSection";
 
 const quickLinkIcons: Record<string, LucideIcon> = {
   results: BarChart3,
@@ -44,11 +45,12 @@ export default async function HomePage({
   const t = getTranslations(typedLocale);
   const isAr = locale === "ar";
 
-  const [dbAnnouncements, dbEvents, coverImage, publishedResults] = await Promise.all([
+  const [dbAnnouncements, dbEvents, coverImage, publishedResults, graduates] = await Promise.all([
     getPublishedAnnouncements(),
     getPublishedEvents(),
     getHeroCoverImage(),
     getPublishedResults(),
+    getActiveGraduates(),
   ]);
 
   const quickLinks = [
@@ -154,6 +156,8 @@ export default async function HomePage({
         results={publishedResults}
         viewAllHref={localePath(typedLocale, Routes.RESULTS)}
       />
+
+      <HomeGraduatesSection locale={typedLocale} graduates={graduates} />
 
       <section className="section-padding">
         <div className="container-school">

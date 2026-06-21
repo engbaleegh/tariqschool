@@ -1,6 +1,5 @@
 import { DefaultSession, type NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcrypt";
 import { db } from "@/lib/prisma";
 import { User, UserRole } from "@/generated/prisma";
@@ -25,7 +24,7 @@ declare module "next-auth/jwt" {
 export const authOptions: NextAuthOptions = {
   callbacks: {
     session: ({ session, token }) => {
-      if (token) {
+      if (token?.id) {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
@@ -46,18 +45,24 @@ export const authOptions: NextAuthOptions = {
       }
       if (token?.id) return token as JWT;
 
-      const dbUser = await db.user.findUnique({
-        where: { email: token?.email ?? "" },
-      });
-      if (!dbUser || !dbUser.isActive) return token;
+      try {
+        const dbUser = await db.user.findUnique({
+          where: { email: token?.email ?? "" },
+        });
+        if (dbUser?.isActive) {
+          return {
+            id: dbUser.id,
+            name: dbUser.name,
+            email: dbUser.email,
+            role: dbUser.role,
+            image: dbUser.image,
+          };
+        }
+      } catch {
+        // Database unavailable — keep existing token
+      }
 
-      return {
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        role: dbUser.role,
-        image: dbUser.image,
-      };
+      return token as JWT;
     },
   },
   session: {
@@ -73,7 +78,9 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Missing credentials");
+        }
 
         const email = credentials.email.trim().toLowerCase();
         const password = credentials.password;
@@ -115,8 +122,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  adapter: PrismaAdapter(db),
   pages: {
-    signIn: "/en/auth/signin",
+    signIn: "/ar/auth/signin",
   },
 };

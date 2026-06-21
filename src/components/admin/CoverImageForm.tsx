@@ -20,6 +20,10 @@ export function CoverImageForm({ locale, currentCover }: CoverImageFormProps) {
   const isAr = locale === "ar";
 
   useEffect(() => {
+    setPreview(currentCover);
+  }, [currentCover]);
+
+  useEffect(() => {
     if (state.ok && state.imageUrl) {
       setPreview(state.imageUrl);
       router.refresh();
@@ -27,14 +31,22 @@ export function CoverImageForm({ locale, currentCover }: CoverImageFormProps) {
   }, [state.ok, state.imageUrl, router]);
 
   return (
-    <form action={formAction} className={formCardClass}>
+    <form action={formAction} className={formCardClass} encType="multipart/form-data">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="existingUrl" value={currentCover} />
-      <p className="text-sm text-slate-600">
-        {isAr
-          ? "ارفع صورة جديدة لغلاف الصفحة الرئيسية (JPG, PNG, WebP — حتى 10 ميجابايت)"
-          : "Upload a new homepage cover image (JPG, PNG, WebP — up to 10MB)"}
-      </p>
+      <div className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-900">
+        <p className="font-medium">{isAr ? "الأبعاد الموصى بها" : "Recommended dimensions"}</p>
+        <p className="mt-1 text-blue-800">
+          {isAr
+            ? "1920 × 600 بكسل (نسبة 16:5) — JPG, JPEG, PNG, WEBP — حتى 10 ميجابايت"
+            : "1920 × 600 px (16:5 ratio) — JPG, JPEG, PNG, WEBP — up to 10MB"}
+        </p>
+        <p className="mt-1 text-xs text-blue-700">
+          {isAr
+            ? "يتم تحسين الصورة تلقائياً وإنشاء نسخ متجاوبة."
+            : "Images are automatically optimized with responsive variants."}
+        </p>
+      </div>
       {preview && (
         <div className="relative mt-4 h-48 overflow-hidden rounded-lg border border-slate-200">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -46,7 +58,7 @@ export function CoverImageForm({ locale, currentCover }: CoverImageFormProps) {
         <input
           name="coverImage"
           type={InputTypes.FILE}
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
           className={inputClass}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -55,7 +67,7 @@ export function CoverImageForm({ locale, currentCover }: CoverImageFormProps) {
         />
       </div>
       {state.error && (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
           {state.error}
         </p>
       )}

@@ -5,6 +5,7 @@ export type Permission =
   | "dashboard.view"
   | "users.manage"
   | "teachers.manage"
+  | "graduates.manage"
   | "announcements.manage"
   | "articles.manage"
   | "events.manage"
@@ -24,6 +25,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "dashboard.view",
     "users.manage",
     "teachers.manage",
+    "graduates.manage",
     "announcements.manage",
     "articles.manage",
     "events.manage",
@@ -42,6 +44,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "dashboard.view",
     "users.manage",
     "teachers.manage",
+    "graduates.manage",
     "announcements.manage",
     "articles.manage",
     "events.manage",
@@ -57,6 +60,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   EDITOR: [
     "dashboard.view",
     "teachers.manage",
+    "graduates.manage",
     "announcements.manage",
     "articles.manage",
     "events.manage",

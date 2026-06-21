@@ -4,8 +4,19 @@ import { db } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
 import { slugify, resolveBilingualField } from "@/lib/utils";
 import { type FormActionState, t } from "@/lib/action-state";
-import { storeUploadedFile, isAllowedImage } from "@/lib/storage";
+import { withFormValues } from "@/lib/form-values";
+import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType } from "@/lib/storage";
+import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
+
+const ARTICLE_FORM_KEYS = [
+  "title",
+  "titleAr",
+  "excerpt",
+  "excerptAr",
+  "content",
+  "contentAr",
+];
 
 function parseArticleForm(formData: FormData) {
   const isPublished = formData.get("isPublished") === "on";
@@ -20,6 +31,8 @@ function parseArticleForm(formData: FormData) {
     String(formData.get("contentAr") ?? "")
   );
 
+  const categoryId = String(formData.get("categoryId") ?? "").trim();
+
   return {
     title,
     titleAr: String(formData.get("titleAr") ?? "").trim() || title,
@@ -28,7 +41,7 @@ function parseArticleForm(formData: FormData) {
     excerpt: String(formData.get("excerpt") ?? "").trim() || null,
     excerptAr: String(formData.get("excerptAr") ?? "").trim() || null,
     featuredImage: String(formData.get("featuredImage") ?? "").trim() || null,
-    categoryId: String(formData.get("categoryId") ?? "").trim() || null,
+    categoryId: categoryId || null,
     isPublished,
     isFeatured: formData.get("isFeatured") === "on",
     publishedAt:
@@ -44,14 +57,16 @@ async function parseFeaturedImage(formData: FormData, existing?: string | null) 
   const file = formData.get("featuredImageFile") as File | null;
   let featuredImage = String(formData.get("featuredImage") ?? "").trim() || existing || null;
   if (file && file.size > 0) {
-    if (!isAllowedImage(file.type)) throw new Error("invalid-image");
-    featuredImage = await storeUploadedFile(file, "articles");
+    const mime = resolveMimeType(file);
+    if (!isAllowedImage(mime)) throw new StorageError("invalid-image");
+    const stored = await storeFileDetailed(file, "articles");
+    featuredImage = stored.url;
   }
   return featuredImage;
 }
 
 async function uniqueSlug(title: string, excludeId?: string) {
-  const baseSlug = slugify(title);
+  const baseSlug = slugify(title) || "article";
   let suffix = 0;
 
   while (true) {
@@ -69,19 +84,31 @@ export async function createArticle(
   const locale = String(formData.get("locale") ?? "ar");
 
   try {
+    await assertAdminSession();
+  } catch {
+    return withFormValues(
+      { ok: false, error: t(locale, "غير مصرح", "Unauthorized") },
+      formData,
+      ARTICLE_FORM_KEYS
+    );
+  }
+
+  try {
     const parsed = parseArticleForm(formData);
 
     if (!parsed.title) {
-      return {
-        ok: false,
-        fieldErrors: { title: t(locale, "العنوان مطلوب", "Title is required") },
-      };
+      return withFormValues(
+        { ok: false, fieldErrors: { title: t(locale, "العنوان مطلوب", "Title is required") } },
+        formData,
+        ARTICLE_FORM_KEYS
+      );
     }
     if (!parsed.content) {
-      return {
-        ok: false,
-        fieldErrors: { content: t(locale, "المحتوى مطلوب", "Content is required") },
-      };
+      return withFormValues(
+        { ok: false, fieldErrors: { content: t(locale, "المحتوى مطلوب", "Content is required") } },
+        formData,
+        ARTICLE_FORM_KEYS
+      );
     }
 
     const featuredImage = await parseFeaturedImage(formData);
@@ -102,11 +129,19 @@ export async function createArticle(
     revalidatePath(`/${locale}/blog`);
     return { ok: true };
   } catch (error) {
-    if (error instanceof Error && error.message === "invalid-image") {
-      return { ok: false, error: t(locale, "صيغة الصورة غير مدعومة", "Unsupported image format") };
+    if (error instanceof StorageError) {
+      const msg =
+        error.message === "invalid-image"
+          ? t(locale, "صيغة الصورة غير مدعومة", "Unsupported image format")
+          : error.message;
+      return withFormValues({ ok: false, error: msg }, formData, ARTICLE_FORM_KEYS);
     }
     console.error("createArticle:", error);
-    return { ok: false, error: t(locale, "تعذر حفظ المقال", "Could not save article") };
+    return withFormValues(
+      { ok: false, error: t(locale, "تعذر حفظ المقال", "Could not save article") },
+      formData,
+      ARTICLE_FORM_KEYS
+    );
   }
 }
 
@@ -118,17 +153,39 @@ export async function updateArticle(
   const locale = String(formData.get("locale") ?? "ar");
 
   try {
+    await assertAdminSession();
+  } catch {
+    return withFormValues(
+      { ok: false, error: t(locale, "غير مصرح", "Unauthorized") },
+      formData,
+      ARTICLE_FORM_KEYS
+    );
+  }
+
+  try {
     const existing = await db.article.findUnique({ where: { id } });
     if (!existing) {
-      return { ok: false, error: t(locale, "المقال غير موجود", "Article not found") };
+      return withFormValues(
+        { ok: false, error: t(locale, "المقال غير موجود", "Article not found") },
+        formData,
+        ARTICLE_FORM_KEYS
+      );
     }
 
     const parsed = parseArticleForm(formData);
     if (!parsed.title) {
-      return { ok: false, fieldErrors: { title: t(locale, "العنوان مطلوب", "Title is required") } };
+      return withFormValues(
+        { ok: false, fieldErrors: { title: t(locale, "العنوان مطلوب", "Title is required") } },
+        formData,
+        ARTICLE_FORM_KEYS
+      );
     }
     if (!parsed.content) {
-      return { ok: false, fieldErrors: { content: t(locale, "المحتوى مطلوب", "Content is required") } };
+      return withFormValues(
+        { ok: false, fieldErrors: { content: t(locale, "المحتوى مطلوب", "Content is required") } },
+        formData,
+        ARTICLE_FORM_KEYS
+      );
     }
 
     const featuredImage = await parseFeaturedImage(formData, existing.featuredImage);
@@ -153,15 +210,24 @@ export async function updateArticle(
     revalidatePath(`/${locale}/blog`);
     return { ok: true };
   } catch (error) {
-    if (error instanceof Error && error.message === "invalid-image") {
-      return { ok: false, error: t(locale, "صيغة الصورة غير مدعومة", "Unsupported image format") };
+    if (error instanceof StorageError) {
+      const msg =
+        error.message === "invalid-image"
+          ? t(locale, "صيغة الصورة غير مدعومة", "Unsupported image format")
+          : error.message;
+      return withFormValues({ ok: false, error: msg }, formData, ARTICLE_FORM_KEYS);
     }
     console.error("updateArticle:", error);
-    return { ok: false, error: t(locale, "تعذر تحديث المقال", "Could not update article") };
+    return withFormValues(
+      { ok: false, error: t(locale, "تعذر تحديث المقال", "Could not update article") },
+      formData,
+      ARTICLE_FORM_KEYS
+    );
   }
 }
 
 export async function deleteArticle(id: string, locale: string) {
+  await assertAdminSession();
   await db.article.delete({ where: { id } });
   await createAuditLog({ action: "DELETE", entity: "Article", entityId: id });
   revalidatePath(`/${locale}/admin/articles`);

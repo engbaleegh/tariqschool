@@ -1,3 +1,6 @@
+"use server";
+
+import { storeFileDetailed, StorageError, resolveMimeType } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
@@ -5,10 +8,10 @@ import { isAdminRole } from "@/lib/permissions";
 import { UserRole } from "@/generated/prisma";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { db } from "@/lib/prisma";
-import { storeUploadedFile } from "@/lib/storage";
 
 const ALLOWED_TYPES = [
   "image/jpeg",
+  "image/jpg",
   "image/png",
   "image/webp",
   "image/gif",
@@ -43,7 +46,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const mime = resolveMimeType(file);
+    if (!ALLOWED_TYPES.includes(mime)) {
       return NextResponse.json({ error: "File type not allowed" }, { status: 400 });
     }
 
@@ -51,23 +55,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File too large (max 25MB)" }, { status: 400 });
     }
 
-    const url = await storeUploadedFile(file, folder);
+    const stored = await storeFileDetailed(file, folder);
 
     try {
       const media = await db.media.create({
         data: {
           filename: file.name,
-          url,
-          mimeType: file.type,
-          size: file.size,
+          url: stored.url,
+          mimeType: stored.mimeType,
+          size: stored.size,
           uploadedBy: session.user.id !== "bootstrap-admin" ? session.user.id : null,
         },
       });
-      return NextResponse.json({ url, id: media.id });
+      return NextResponse.json({
+        url: stored.url,
+        id: media.id,
+        responsiveUrls: stored.responsiveUrls,
+      });
     } catch {
-      return NextResponse.json({ url, id: null });
+      return NextResponse.json({
+        url: stored.url,
+        id: null,
+        responsiveUrls: stored.responsiveUrls,
+        warning: "File uploaded but media record could not be saved",
+      });
     }
-  } catch {
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  } catch (error) {
+    const message =
+      error instanceof StorageError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : "Upload failed";
+    console.error("Upload API error:", error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

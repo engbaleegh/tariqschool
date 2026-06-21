@@ -23,6 +23,7 @@ export enum Routes {
   PRINCIPAL = "principal",
   ACHIEVEMENTS = "achievements",
   HONOR_BOARD = "honor-board",
+  GRADUATES = "graduates",
   REGULATIONS = "regulations",
   FAQ = "faq",
   CLUBS = "clubs",

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Locale } from "@/i18n.config";
 import { HeroSection } from "@/components/public/HeroSection";
@@ -20,6 +21,7 @@ export default async function BlogDetailPage({
   let title = "";
   let content = "";
   let date = "";
+  let featuredImage: string | null = null;
 
   try {
     const item = await db.article.findFirst({
@@ -29,6 +31,7 @@ export default async function BlogDetailPage({
       title = isAr ? item.titleAr ?? item.title : item.title;
       content = isAr ? item.contentAr ?? item.content : item.content;
       date = item.publishedAt?.toISOString().split("T")[0] ?? "";
+      featuredImage = item.featuredImage;
     }
   } catch {
     // fallback below
@@ -52,7 +55,19 @@ export default async function BlogDetailPage({
               {formatDate(date, locale)}
             </time>
           )}
-          <div className="prose-school mt-6" dangerouslySetInnerHTML={{ __html: content }} />
+          {featuredImage && (
+            <div className="relative mt-6 aspect-video overflow-hidden rounded-xl border border-slate-200">
+              <Image
+                src={featuredImage}
+                alt={title}
+                fill
+                className="object-cover"
+                unoptimized
+                priority
+              />
+            </div>
+          )}
+          <div className="prose-school mt-6 whitespace-pre-wrap">{content}</div>
           <Link
             href={localePath(typedLocale, Routes.BLOG)}
             className="mt-8 inline-flex text-sm font-medium text-blue-800 hover:underline"

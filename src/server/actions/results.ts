@@ -2,13 +2,30 @@
 
 import { db } from "@/lib/prisma";
 import { ResultFileType } from "@/generated/prisma";
-import { storeUploadedFile, detectResultFileType, isAllowedResultFile } from "@/lib/storage";
+import {
+  storeFileDetailed,
+  detectResultFileType,
+  isAllowedResultFile,
+  StorageError,
+  resolveMimeType,
+} from "@/lib/storage";
 import { createAuditLog } from "@/lib/audit";
-import { addLocalResult } from "@/lib/local-results";
+import { assertAdminSession } from "@/lib/action-auth";
 import { type FormActionState, t } from "@/lib/action-state";
+import { withFormValues, extractFormValues } from "@/lib/form-values";
 import { resolveBilingualField } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+const RESULT_FORM_KEYS = [
+  "title",
+  "titleAr",
+  "description",
+  "descriptionAr",
+  "academicYear",
+  "semester",
+  "category",
+];
 
 function parseResultForm(formData: FormData) {
   const title = resolveBilingualField(
@@ -33,42 +50,69 @@ export async function createSchoolResult(
   formData: FormData
 ): Promise<FormActionState> {
   const locale = String(formData.get("locale") ?? "ar");
+
+  try {
+    await assertAdminSession();
+  } catch {
+    return withFormValues(
+      { ok: false, error: t(locale, "غير مصرح", "Unauthorized") },
+      formData,
+      RESULT_FORM_KEYS
+    );
+  }
+
   const file = formData.get("resultFile") as File | null;
   const parsed = parseResultForm(formData);
 
   if (!parsed.title) {
-    return { ok: false, fieldErrors: { title: t(locale, "عنوان النتيجة مطلوب", "Result title is required") } };
+    return withFormValues(
+      {
+        ok: false,
+        fieldErrors: { title: t(locale, "عنوان النتيجة مطلوب", "Result title is required") },
+      },
+      formData,
+      RESULT_FORM_KEYS
+    );
   }
 
   if (!file || file.size === 0) {
-    return { ok: false, fieldErrors: { resultFile: t(locale, "يرجى اختيار ملف", "Please select a file") } };
+    return withFormValues(
+      {
+        ok: false,
+        fieldErrors: { resultFile: t(locale, "يرجى اختيار ملف", "Please select a file") },
+      },
+      formData,
+      RESULT_FORM_KEYS
+    );
   }
 
-  if (!isAllowedResultFile(file.type)) {
-    return {
-      ok: false,
-      error: t(locale, "الملفات المدعومة: PDF, JPG, PNG, JPEG", "Supported files: PDF, JPG, PNG, JPEG"),
-    };
+  const mime = resolveMimeType(file);
+  if (!isAllowedResultFile(mime)) {
+    return withFormValues(
+      {
+        ok: false,
+        error: t(locale, "الملفات المدعومة: PDF, JPG, PNG, JPEG, WEBP", "Supported: PDF, JPG, PNG, JPEG, WEBP"),
+      },
+      formData,
+      RESULT_FORM_KEYS
+    );
   }
 
   try {
-    const fileUrl = await storeUploadedFile(file, "results");
+    const stored = await storeFileDetailed(file, "results");
     const fileType =
-      detectResultFileType(file.type) === "PDF" ? ResultFileType.PDF : ResultFileType.IMAGE;
+      detectResultFileType(stored.mimeType) === "PDF" ? ResultFileType.PDF : ResultFileType.IMAGE;
 
-    try {
-      const result = await db.schoolResult.create({
-        data: { ...parsed, fileUrl, fileType },
-      });
-      await createAuditLog({
-        action: "CREATE",
-        entity: "SchoolResult",
-        entityId: result.id,
-        details: { title: result.title },
-      });
-    } catch {
-      await addLocalResult({ ...parsed, fileUrl, fileType: fileType === ResultFileType.PDF ? "PDF" : "IMAGE" });
-    }
+    const result = await db.schoolResult.create({
+      data: { ...parsed, fileUrl: stored.url, fileType },
+    });
+
+    await createAuditLog({
+      action: "CREATE",
+      entity: "SchoolResult",
+      entityId: result.id,
+      details: { title: result.title },
+    });
 
     revalidatePath(`/${locale}/admin/results`);
     revalidatePath(`/${locale}/results`);
@@ -76,7 +120,11 @@ export async function createSchoolResult(
     return { ok: true };
   } catch (error) {
     console.error("createSchoolResult:", error);
-    return { ok: false, error: t(locale, "تعذر رفع النتيجة", "Could not upload result") };
+    const message =
+      error instanceof StorageError
+        ? error.message
+        : t(locale, "تعذر رفع النتيجة. تحقق من الاتصال بقاعدة البيانات.", "Could not upload result. Check database connection.");
+    return withFormValues({ ok: false, error: message }, formData, RESULT_FORM_KEYS);
   }
 }
 
@@ -86,31 +134,59 @@ export async function updateSchoolResult(
   formData: FormData
 ): Promise<FormActionState> {
   const locale = String(formData.get("locale") ?? "ar");
+
+  try {
+    await assertAdminSession();
+  } catch {
+    return withFormValues(
+      { ok: false, error: t(locale, "غير مصرح", "Unauthorized") },
+      formData,
+      RESULT_FORM_KEYS
+    );
+  }
+
   const file = formData.get("resultFile") as File | null;
   const parsed = parseResultForm(formData);
 
   if (!parsed.title) {
-    return { ok: false, fieldErrors: { title: t(locale, "عنوان النتيجة مطلوب", "Result title is required") } };
+    return withFormValues(
+      {
+        ok: false,
+        fieldErrors: { title: t(locale, "عنوان النتيجة مطلوب", "Result title is required") },
+      },
+      formData,
+      RESULT_FORM_KEYS
+    );
   }
 
   try {
     const existing = await db.schoolResult.findUnique({ where: { id } });
     if (!existing) {
-      return { ok: false, error: t(locale, "النتيجة غير موجودة", "Result not found") };
+      return withFormValues(
+        { ok: false, error: t(locale, "النتيجة غير موجودة", "Result not found") },
+        formData,
+        RESULT_FORM_KEYS
+      );
     }
 
     let fileUrl = existing.fileUrl;
     let fileType = existing.fileType;
 
     if (file && file.size > 0) {
-      if (!isAllowedResultFile(file.type)) {
-        return {
-          ok: false,
-          error: t(locale, "الملفات المدعومة: PDF, JPG, PNG, JPEG", "Supported files: PDF, JPG, PNG, JPEG"),
-        };
+      const mime = resolveMimeType(file);
+      if (!isAllowedResultFile(mime)) {
+        return withFormValues(
+          {
+            ok: false,
+            error: t(locale, "الملفات المدعومة: PDF, JPG, PNG, JPEG, WEBP", "Supported: PDF, JPG, PNG, JPEG, WEBP"),
+          },
+          formData,
+          RESULT_FORM_KEYS
+        );
       }
-      fileUrl = await storeUploadedFile(file, "results");
-      fileType = detectResultFileType(file.type) === "PDF" ? ResultFileType.PDF : ResultFileType.IMAGE;
+      const stored = await storeFileDetailed(file, "results");
+      fileUrl = stored.url;
+      fileType = detectResultFileType(stored.mimeType) === "PDF" ? ResultFileType.PDF : ResultFileType.IMAGE;
     }
 
     await db.schoolResult.update({
@@ -126,19 +202,26 @@ export async function updateSchoolResult(
     return { ok: true };
   } catch (error) {
     console.error("updateSchoolResult:", error);
-    return { ok: false, error: t(locale, "تعذر تحديث النتيجة", "Could not update result") };
+    const message =
+      error instanceof StorageError
+        ? error.message
+        : t(locale, "تعذر تحديث النتيجة", "Could not update result");
+    return withFormValues({ ok: false, error: message }, formData, RESULT_FORM_KEYS);
   }
 }
 
 export async function deleteSchoolResult(id: string, locale: string) {
-  try {
-    await db.schoolResult.delete({ where: { id } });
-    await createAuditLog({ action: "DELETE", entity: "SchoolResult", entityId: id });
-  } catch {
-    // ignore
-  }
+  await assertAdminSession();
+  await db.schoolResult.delete({ where: { id } });
+  await createAuditLog({ action: "DELETE", entity: "SchoolResult", entityId: id });
   revalidatePath(`/${locale}/admin/results`);
   revalidatePath(`/${locale}/results`);
   revalidatePath(`/${locale}`);
   redirect(`/${locale}/admin/results`);
 }
+
+export async function getSchoolResultForEdit(id: string) {
+  return db.schoolResult.findUnique({ where: { id } });
+}
+
+export { extractFormValues as extractResultFormValues };

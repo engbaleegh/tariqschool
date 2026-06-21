@@ -6,6 +6,7 @@ type FormActionsProps = {
   submitLabel?: string;
   isSubmitting?: boolean;
   className?: string;
+  locale?: string;
 };
 
 export default function FormActions({
@@ -13,7 +14,10 @@ export default function FormActions({
   submitLabel = "Save",
   isSubmitting = false,
   className,
+  locale = "en",
 }: FormActionsProps) {
+  const isAr = locale === "ar";
+
   return (
     <div
       className={cn(
@@ -25,7 +29,7 @@ export default function FormActions({
         href={cancelHref}
         className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
       >
-        Cancel
+        {isAr ? "إلغاء" : "Cancel"}
       </Link>
       <button
         type="submit"

@@ -28,6 +28,7 @@ export default async function TeachersPage({ params }: PageProps) {
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {teachers.map((teacher) => {
               const name = getLocalizedField(teacher, "name", locale);
+              const bio = getLocalizedField(teacher, "biography", locale);
               const hasPhoto = "photo" in teacher && typeof teacher.photo === "string" && teacher.photo;
 
               return (
@@ -54,6 +55,9 @@ export default async function TeachersPage({ params }: PageProps) {
                     <p className="mt-1 text-xs text-slate-500">
                       {getLocalizedField(teacher as Record<string, unknown>, "department", locale)}
                     </p>
+                  )}
+                  {bio && (
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{bio}</p>
                   )}
                 </article>
               );

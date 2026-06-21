@@ -21,12 +21,12 @@ export const schoolInfo = {
     en: "56 years of educational excellence and community service",
     ar: "٥٦ عاماً من التميز التعليمي وخدمة المجتمع",
   },
-  phone: "+966 12 345 6789",
+  phone: "+967773408338",
   email: "info@tariq-school.com",
-  whatsapp: "966123456789",
+  whatsapp: "967773408338",
   address: {
-    en: "Al-Maqatin, Saudi Arabia",
-    ar: "المقاطن، المملكة العربية السعودية",
+    en: "Al-Maqatin, Ibb Governorate, Yemen",
+    ar: "اليمن، محافظة إب، المقاطن",
   },
 };
 
@@ -249,6 +249,7 @@ export const translations = {
     principal: "Principal's Message",
     achievements: "Achievements",
     honorBoard: "Honor Board",
+    graduates: "Graduates",
     regulations: "Regulations",
     faq: "FAQ",
     clubs: "Clubs",
@@ -288,6 +289,7 @@ export const translations = {
     principal: "كلمة المدير",
     achievements: "الإنجازات",
     honorBoard: "لوحة الشرف",
+    graduates: "الخريجون",
     regulations: "اللوائح",
     faq: "الأسئلة الشائعة",
     clubs: "الأندية",

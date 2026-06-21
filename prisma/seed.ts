@@ -30,14 +30,14 @@ async function main() {
     { key: "school_name", value: "Tariq Bin Ziyad Al-Maqatin School", valueAr: "مجمع طارق بن زياد المقاطن", group: "general" },
     { key: "school_vision", value: "To provide excellence in education and nurture future leaders.", valueAr: "تقديم التميز في التعليم ورعاية قادة المستقبل.", group: "about" },
     { key: "school_mission", value: "Empowering students through innovative learning and character development.", valueAr: "تمكين الطلاب من خلال التعلم المبتكر وتنمية الشخصية.", group: "about" },
-    { key: "principal_message", value: "Welcome to Aldar School. We are committed to academic excellence.", valueAr: "مرحباً بكم في مدرسة الدار. نحن ملتزمون بالتميز الأكاديمي.", group: "about" },
+    { key: "principal_message", value: "Welcome to Tariq Bin Ziyad Al-Maqatin School. We are committed to academic excellence.", valueAr: "مرحباً بكم في مجمع طارق بن زياد المقاطن. نحن ملتزمون بالتميز الأكاديمي.", group: "about" },
     { key: "contact_email", value: "info@tariq-school.com", group: "contact" },
-    { key: "contact_phone", value: "+966 12 345 6789", group: "contact" },
-    { key: "contact_address", value: "123 Education Street, Riyadh, Saudi Arabia", valueAr: "123 شارع التعليم، الرياض، المملكة العربية السعودية", group: "contact" },
-    { key: "whatsapp_number", value: "966123456789", group: "contact" },
-    { key: "facebook_url", value: "https://facebook.com/aldarschool", group: "social" },
-    { key: "twitter_url", value: "https://twitter.com/aldarschool", group: "social" },
-    { key: "instagram_url", value: "https://instagram.com/aldarschool", group: "social" },
+    { key: "contact_phone", value: "+967773408338", group: "contact" },
+    { key: "contact_address", value: "Al-Maqatin, Ibb Governorate, Yemen", valueAr: "اليمن، محافظة إب، المقاطن", group: "contact" },
+    { key: "whatsapp_number", value: "967773408338", group: "contact" },
+    { key: "facebook_url", value: "https://facebook.com/tariqschool", group: "social" },
+    { key: "twitter_url", value: "https://twitter.com/tariqschool", group: "social" },
+    { key: "instagram_url", value: "https://instagram.com/tariqschool", group: "social" },
   ];
 
   for (const setting of settings) {
@@ -98,9 +98,9 @@ async function main() {
   await db.teacher.createMany({
     skipDuplicates: true,
     data: [
-      { fullName: "Dr. Ahmed Al-Rashid", fullNameAr: "د. أحمد الرashid", jobTitle: "Principal", jobTitleAr: "مدير المدرسة", department: "Administration", departmentAr: "الإدارة", email: "principal@aldarschool.com", isActive: true, order: 1 },
-      { fullName: "Sarah Johnson", fullNameAr: "سارة جونson", jobTitle: "Mathematics Teacher", jobTitleAr: "معلمة رياضيات", department: "Mathematics", departmentAr: "الرياضيات", email: "sarah@aldarschool.com", isActive: true, order: 2 },
-      { fullName: "Mohammed Hassan", fullNameAr: "محمد حسan", jobTitle: "Science Teacher", jobTitleAr: "معلم علوم", department: "Science", departmentAr: "العلوم", email: "mohammed@aldarschool.com", isActive: true, order: 3 },
+      { fullName: "Dr. Ahmed Al-Rashid", fullNameAr: "د. أحمد الرashid", jobTitle: "Principal", jobTitleAr: "مدير المدرسة", department: "Administration", departmentAr: "الإدارة", email: "principal@tariq-school.com", isActive: true, order: 1 },
+      { fullName: "Sarah Johnson", fullNameAr: "سارة جونson", jobTitle: "Mathematics Teacher", jobTitleAr: "معلمة رياضيات", department: "Mathematics", departmentAr: "الرياضيات", email: "sarah@tariq-school.com", isActive: true, order: 2 },
+      { fullName: "Mohammed Hassan", fullNameAr: "محمد حسan", jobTitle: "Science Teacher", jobTitleAr: "معلم علوم", department: "Science", departmentAr: "العلوم", email: "mohammed@tariq-school.com", isActive: true, order: 3 },
     ],
   });
 

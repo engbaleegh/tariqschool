@@ -2,10 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type { Locale } from "@/i18n.config";
 import { InputTypes } from "@/constants/enums";
-
 import { BOOTSTRAP_ADMIN } from "@/constants/site";
 
 type SignInFormProps = {
@@ -13,7 +12,6 @@ type SignInFormProps = {
 };
 
 export function SignInForm({ locale }: SignInFormProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? `/${locale}/admin`;
   const isAr = locale === "ar";
@@ -28,21 +26,36 @@ export function SignInForm({ locale }: SignInFormProps) {
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const normalizedEmail = email.trim().toLowerCase();
 
-    setLoading(false);
+    try {
+      const result = await signIn("credentials", {
+        email: normalizedEmail,
+        password,
+        redirect: false,
+        callbackUrl,
+      });
 
-    if (result?.error) {
-      setError(isAr ? "بيانات الدخول غير صحيحة" : "Invalid email or password");
-      return;
+      if (!result) {
+        setError(isAr ? "تعذر الاتصال بالخادم. حاول مرة أخرى." : "Could not reach the server. Please try again.");
+        return;
+      }
+
+      if (result.error || !result.ok) {
+        setError(
+          isAr
+            ? "بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور."
+            : "Invalid email or password. Please check your credentials."
+        );
+        return;
+      }
+
+      window.location.assign(result.url ?? callbackUrl);
+    } catch {
+      setError(isAr ? "حدث خطأ غير متوقع. حاول مرة أخرى." : "An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(callbackUrl);
-    router.refresh();
   }
 
   return (
@@ -55,6 +68,7 @@ export function SignInForm({ locale }: SignInFormProps) {
           id="email"
           type={InputTypes.EMAIL}
           required
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -68,12 +82,17 @@ export function SignInForm({ locale }: SignInFormProps) {
           id="password"
           type={InputTypes.PASSWORD}
           required
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          {error}
+        </p>
+      )}
       <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
         {isAr ? "بيانات الدخول الافتراضية:" : "Default login credentials:"}
         <br />
