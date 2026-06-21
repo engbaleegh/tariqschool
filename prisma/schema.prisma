@@ -1,0 +1,589 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  password      String
+  name          String
+  image         String?
+  phone         String?
+  role          UserRole   @default(EDITOR)
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  mediaFiles    Media[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  TEACHER
+}
+
+// ─── School Settings ────────────────────────────────────────────────────────
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  valueAr   String?  @db.Text
+  group     String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HomepageBanner {
+  id          String   @id @default(uuid())
+  title       String
+  titleAr     String?
+  subtitle    String?
+  subtitleAr  String?
+  image       String
+  link        String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HomepageSection {
+  id        String   @id @default(uuid())
+  type      String
+  title     String?
+  titleAr   String?
+  content   String?  @db.Text
+  contentAr String?  @db.Text
+  data      Json?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Teachers ───────────────────────────────────────────────────────────────
+
+model Teacher {
+  id             String   @id @default(uuid())
+  fullName       String
+  fullNameAr     String?
+  photo          String?
+  jobTitle       String?
+  jobTitleAr     String?
+  department     String?
+  departmentAr   String?
+  biography      String?  @db.Text
+  biographyAr    String?  @db.Text
+  qualifications String?  @db.Text
+  qualificationsAr String? @db.Text
+  email          String?
+  phone          String?
+  socialLinks    Json?
+  order          Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([department])
+}
+
+// ─── Content Categories ─────────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  slug        String   @unique
+  type        CategoryType
+  description String?
+  descriptionAr String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  announcements Announcement[]
+  articles    Article[]
+  downloads   Download[]
+
+  @@index([type])
+}
+
+enum CategoryType {
+  ANNOUNCEMENT
+  BLOG
+  DOWNLOAD
+}
+
+// ─── Announcements ──────────────────────────────────────────────────────────
+
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  titleAr     String?
+  slug        String   @unique
+  content     String   @db.Text
+  contentAr   String?  @db.Text
+  excerpt     String?
+  excerptAr   String?
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  attachments Json?
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([categoryId])
+}
+
+// ─── Blog / Articles ────────────────────────────────────────────────────────
+
+model Tag {
+  id        String       @id @default(uuid())
+  name      String
+  nameAr    String?
+  slug      String       @unique
+  articles  ArticleTag[]
+  createdAt DateTime     @default(now())
+}
+
+model Article {
+  id            String       @id @default(uuid())
+  title         String
+  titleAr       String?
+  slug          String       @unique
+  content       String       @db.Text
+  contentAr     String?      @db.Text
+  excerpt       String?
+  excerptAr     String?
+  featuredImage String?
+  isPublished   Boolean      @default(false)
+  isFeatured    Boolean      @default(false)
+  publishedAt   DateTime?
+  categoryId    String?
+  category      Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags          ArticleTag[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([isPublished])
+  @@index([isFeatured])
+  @@index([publishedAt])
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+}
+
+// ─── Events & Activities ────────────────────────────────────────────────────
+
+model Event {
+  id          String    @id @default(uuid())
+  title       String
+  titleAr     String?
+  slug        String    @unique
+  description String    @db.Text
+  descriptionAr String? @db.Text
+  eventDate   DateTime
+  endDate     DateTime?
+  location    String?
+  locationAr  String?
+  type        EventType @default(ACTIVITY)
+  images      Json?
+  attachments Json?
+  isPublished Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([eventDate])
+  @@index([type])
+  @@index([isPublished])
+}
+
+enum EventType {
+  ACTIVITY
+  CELEBRATION
+  COMPETITION
+  TRIP
+  WORKSHOP
+  EXAM
+  HOLIDAY
+  SEMESTER
+  GENERAL
+}
+
+// ─── Gallery ────────────────────────────────────────────────────────────────
+
+model GalleryAlbum {
+  id          String         @id @default(uuid())
+  title       String
+  titleAr     String?
+  slug        String         @unique
+  description String?
+  descriptionAr String?
+  category    GalleryCategory @default(GENERAL)
+  coverImage  String?
+  isPublished Boolean        @default(true)
+  order       Int            @default(0)
+  images      GalleryImage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+}
+
+model GalleryImage {
+  id        String       @id @default(uuid())
+  url       String
+  alt       String?
+  altAr     String?
+  order     Int          @default(0)
+  albumId   String
+  album     GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@index([albumId])
+}
+
+enum GalleryCategory {
+  ACTIVITIES
+  CELEBRATIONS
+  SPORTS
+  TRIPS
+  CLASSROOMS
+  GENERAL
+}
+
+// ─── School Results (bulk result files) ─────────────────────────────────────
+
+model SchoolResult {
+  id            String         @id @default(uuid())
+  title         String
+  titleAr       String?
+  description   String?        @db.Text
+  descriptionAr String?        @db.Text
+  academicYear  String?
+  semester      String?
+  category      String?
+  fileUrl       String
+  fileType      ResultFileType @default(PDF)
+  isPublished   Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([isPublished])
+  @@index([academicYear])
+  @@index([category])
+  @@index([createdAt])
+}
+
+enum ResultFileType {
+  PDF
+  IMAGE
+}
+
+// ─── Downloads ──────────────────────────────────────────────────────────────
+
+model Download {
+  id          String         @id @default(uuid())
+  title       String
+  titleAr     String?
+  description String?
+  descriptionAr String?
+  fileUrl     String
+  fileSize    Int?
+  fileType    String?
+  categoryId  String?
+  category    Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  downloadType DownloadType  @default(DOCUMENT)
+  downloadCount Int          @default(0)
+  isPublished Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([downloadType])
+  @@index([isPublished])
+}
+
+enum DownloadType {
+  CIRCULAR
+  FORM
+  DOCUMENT
+  SCHEDULE
+  PDF
+}
+
+// ─── Academic Calendar ──────────────────────────────────────────────────────
+
+model CalendarEvent {
+  id          String    @id @default(uuid())
+  title       String
+  titleAr     String?
+  description String?
+  descriptionAr String?
+  startDate   DateTime
+  endDate     DateTime?
+  type        EventType @default(GENERAL)
+  isPublished Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([startDate])
+  @@index([type])
+}
+
+// ─── Contact & Newsletter ───────────────────────────────────────────────────
+
+model ContactMessage {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String        @db.Text
+  status    MessageStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ─── Additional School Pages ────────────────────────────────────────────────
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  questionAr String?
+  answer    String   @db.Text
+  answerAr  String?  @db.Text
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Club {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  description String?  @db.Text
+  descriptionAr String? @db.Text
+  image       String?
+  supervisor  String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  description String?  @db.Text
+  descriptionAr String? @db.Text
+  headName    String?
+  headNameAr  String?
+  image       String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  title       String
+  titleAr     String?
+  description String?  @db.Text
+  descriptionAr String? @db.Text
+  image       String?
+  year        Int?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HonorStudent {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  grade       String?
+  gradeAr     String?
+  achievement String?
+  achievementAr String?
+  image       String?
+  academicYear String
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Regulation {
+  id        String   @id @default(uuid())
+  title     String
+  titleAr   String?
+  content   String   @db.Text
+  contentAr String?  @db.Text
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ParentResource {
+  id          String   @id @default(uuid())
+  title       String
+  titleAr     String?
+  description String?  @db.Text
+  descriptionAr String? @db.Text
+  fileUrl     String?
+  link        String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SchoolService {
+  id          String   @id @default(uuid())
+  name        String
+  nameAr      String?
+  description String?  @db.Text
+  descriptionAr String? @db.Text
+  icon        String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Media Library ────────────────────────────────────────────────────────────
+
+model Media {
+  id        String    @id @default(uuid())
+  filename  String
+  url       String
+  mimeType  String
+  size      Int
+  alt       String?
+  uploadedBy String?
+  user      User?     @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+
+  @@index([mimeType])
+  @@index([uploadedBy])
+}
+
+// ─── Analytics & Audit ──────────────────────────────────────────────────────
+
+model VisitorStat {
+  id        String   @id @default(uuid())
+  path      String
+  locale    String?
+  userAgent String?
+  ip        String?
+  referrer  String?
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Backup {
+  id        String   @id @default(uuid())
+  filename  String
+  url       String
+  size      Int
+  createdBy String?
+  createdAt DateTime @default(now())
+}

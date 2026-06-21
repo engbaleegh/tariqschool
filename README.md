@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# مجمع طارق بن زياد المقاطن — Tariq School
 
-## Getting Started
+موقع إلكتروني ثنائي اللغة (عربي/إنجليزي) مع لوحة إدارة لمجمع طارق بن زياد المقاطن.
 
-First, run the development server:
+## المميزات
+
+- الصفحة الرئيسية مع صورة غلاف قابلة للتغيير
+- زر **لوحة الإدارة** في الصفحة الرئيسية
+- رفع نتائج الطلاب (صور + PDF)
+- رفع صور وفيديوهات ومقالات عن المدرسة والأنشطة
+- ٥٦ عاماً منذ افتتاح المدرسة
+
+## التشغيل
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+افتح: http://localhost:3000/ar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## بيانات الدخول للإدارة
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| الحقل | القيمة |
+|-------|--------|
+| البريد | `admin@tariq-school.com` |
+| كلمة المرور | `Admin@123` |
 
-## Learn More
+لوحة الإدارة: http://localhost:3000/ar/admin
 
-To learn more about Next.js, take a look at the following resources:
+## قاعدة البيانات (اختياري)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+يعمل تسجيل الدخول بدون PostgreSQL عبر حساب Bootstrap. لتفعيل حفظ النتائج والإعدادات في قاعدة البيانات:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx prisma db push
+npm run db:seed
+```
 
-## Deploy on Vercel
+## رفع الملفات
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **بدون إعداد إضافي**: تُحفظ الملفات في `public/uploads/`
+- **على Vercel**: أضف `BLOB_READ_WRITE_TOKEN` في متغيرات البيئة
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## النشر
+
+عيّن `NEXT_PUBLIC_BASE_URL` إلى نطاقك (مثل `https://tariq-school.com`).
