@@ -7,7 +7,7 @@ import {
   deleteLocalTeacher,
   isLocalTeacherId,
 } from "@/lib/local-teachers";
-import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType } from "@/lib/storage";
+import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType, deleteBlobUrl } from "@/lib/storage";
 import { type FormActionState, t } from "@/lib/action-state";
 import { withFormValues } from "@/lib/form-values";
 import { resolveBilingualField } from "@/lib/utils";
@@ -42,10 +42,12 @@ async function parseTeacherForm(formData: FormData) {
   let photo = existingPhoto;
 
   if (formData.get("removePhoto") === "on") {
+    if (existingPhoto) await deleteBlobUrl(existingPhoto);
     photo = null;
   } else if (photoFile && photoFile.size > 0) {
     const mime = resolveMimeType(photoFile);
     if (!isAllowedImage(mime)) throw new StorageError("invalid-image");
+    if (existingPhoto) await deleteBlobUrl(existingPhoto);
     const stored = await storeFileDetailed(photoFile, "teachers");
     photo = stored.url;
   }

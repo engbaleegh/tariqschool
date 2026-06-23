@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { SETTING_KEYS } from "@/constants/site";
-import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType } from "@/lib/storage";
+import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType, deleteBlobUrl } from "@/lib/storage";
 import { setLocalSetting } from "@/lib/local-settings";
 import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
@@ -42,7 +42,10 @@ export async function updateHeroCover(
             : "Supported formats: JPG, JPEG, PNG, WEBP",
         };
       }
-      const stored = await storeFileDetailed(file, "covers");
+      if (existingUrl && existingUrl.includes("blob.vercel-storage.com")) {
+        await deleteBlobUrl(existingUrl);
+      }
+      const stored = await storeFileDetailed(file, "covers", { heroCover: true });
       imageUrl = stored.url;
     }
 

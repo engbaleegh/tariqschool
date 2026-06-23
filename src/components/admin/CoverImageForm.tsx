@@ -38,8 +38,8 @@ export function CoverImageForm({ locale, currentCover }: CoverImageFormProps) {
         <p className="font-medium">{isAr ? "الأبعاد الموصى بها" : "Recommended dimensions"}</p>
         <p className="mt-1 text-blue-800">
           {isAr
-            ? "1920 × 600 بكسل (نسبة 16:5) — JPG, JPEG, PNG, WEBP — حتى 10 ميجابايت"
-            : "1920 × 600 px (16:5 ratio) — JPG, JPEG, PNG, WEBP — up to 10MB"}
+            ? "1920 × 800 بكسل — JPG, JPEG, PNG, WEBP — حتى 10 ميجابايت"
+            : "1920 × 800 px — JPG, JPEG, PNG, WEBP — up to 10MB"}
         </p>
         <p className="mt-1 text-xs text-blue-700">
           {isAr

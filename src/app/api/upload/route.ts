@@ -1,6 +1,4 @@
-"use server";
-
-import { storeFileDetailed, StorageError, resolveMimeType } from "@/lib/storage";
+import { storeFileDetailed, StorageError, resolveMimeType, isAllowedImage, isAllowedResultFile } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
@@ -8,20 +6,6 @@ import { isAdminRole } from "@/lib/permissions";
 import { UserRole } from "@/generated/prisma";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { db } from "@/lib/prisma";
-
-const ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "application/pdf",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
 
 const MAX_SIZE = 25 * 1024 * 1024;
 
@@ -47,8 +31,11 @@ export async function POST(request: NextRequest) {
     }
 
     const mime = resolveMimeType(file);
-    if (!ALLOWED_TYPES.includes(mime)) {
-      return NextResponse.json({ error: "File type not allowed" }, { status: 400 });
+    if (!isAllowedImage(mime) && !isAllowedResultFile(mime)) {
+      return NextResponse.json(
+        { error: "File type not allowed. Use JPG, JPEG, PNG, WEBP, or PDF." },
+        { status: 400 }
+      );
     }
 
     if (file.size > MAX_SIZE) {
@@ -71,12 +58,14 @@ export async function POST(request: NextRequest) {
         url: stored.url,
         id: media.id,
         responsiveUrls: stored.responsiveUrls,
+        storage: "vercel-blob",
       });
     } catch {
       return NextResponse.json({
         url: stored.url,
         id: null,
         responsiveUrls: stored.responsiveUrls,
+        storage: "vercel-blob",
         warning: "File uploaded but media record could not be saved",
       });
     }

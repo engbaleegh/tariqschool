@@ -5,7 +5,7 @@ import { createAuditLog } from "@/lib/audit";
 import { slugify, resolveBilingualField } from "@/lib/utils";
 import { type FormActionState, t } from "@/lib/action-state";
 import { withFormValues } from "@/lib/form-values";
-import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType } from "@/lib/storage";
+import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType, deleteBlobUrl } from "@/lib/storage";
 import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
 
@@ -56,9 +56,16 @@ function parseArticleForm(formData: FormData) {
 async function parseFeaturedImage(formData: FormData, existing?: string | null) {
   const file = formData.get("featuredImageFile") as File | null;
   let featuredImage = String(formData.get("featuredImage") ?? "").trim() || existing || null;
+
+  if (formData.get("removeFeaturedImage") === "on") {
+    if (featuredImage) await deleteBlobUrl(featuredImage);
+    return null;
+  }
+
   if (file && file.size > 0) {
     const mime = resolveMimeType(file);
     if (!isAllowedImage(mime)) throw new StorageError("invalid-image");
+    if (featuredImage) await deleteBlobUrl(featuredImage);
     const stored = await storeFileDetailed(file, "articles");
     featuredImage = stored.url;
   }

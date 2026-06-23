@@ -120,13 +120,17 @@ export function ArticleForm({ locale, mode, articleId, defaultValues }: ArticleF
         <div>
           <label className={labelClass}>{isAr ? "صورة المقال" : "Featured image"}</label>
           {defaultValues?.featuredImage && (
-            <div className="mb-2">
+            <div className="mb-2 flex items-center gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={defaultValues.featuredImage}
                 alt=""
                 className="h-32 w-auto rounded-lg border border-slate-200 object-cover"
               />
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input name="removeFeaturedImage" type={InputTypes.CHECKBOX} />
+                {isAr ? "حذف الصورة" : "Remove image"}
+              </label>
             </div>
           )}
           <input

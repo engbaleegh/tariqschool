@@ -1,6 +1,4 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-import { put } from "@vercel/blob";
+import { del, put, type PutBlobResult } from "@vercel/blob";
 import sharp from "sharp";
 
 const IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
@@ -8,6 +6,8 @@ const PDF_TYPE = "application/pdf";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
+const HERO_TARGET_WIDTH = 1920;
+const HERO_TARGET_HEIGHT = 800;
 const RESPONSIVE_WIDTHS = [640, 1280, 1920] as const;
 
 export class StorageError extends Error {
@@ -19,9 +19,17 @@ export class StorageError extends Error {
 
 export type StoredFile = {
   url: string;
+  pathname: string;
   mimeType: string;
   size: number;
   responsiveUrls?: Record<string, string>;
+};
+
+export type BlobUploadOptions = {
+  /** Optimize as homepage hero (1920x800 cover crop) */
+  heroCover?: boolean;
+  /** Skip image optimization (upload raw bytes) */
+  raw?: boolean;
 };
 
 export function detectResultFileType(mimeType: string): "PDF" | "IMAGE" {
@@ -49,42 +57,41 @@ export function resolveMimeType(file: File): string {
   return map[ext ?? ""] ?? "application/octet-stream";
 }
 
-export function responsiveSrcSet(responsiveUrls?: Record<string, string>): string | undefined {
-  if (!responsiveUrls) return undefined;
-  const entries = Object.entries(responsiveUrls)
-    .map(([width, url]) => `${url} ${width}w`)
-    .join(", ");
-  return entries || undefined;
-}
-
 function safeFilename(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-async function uploadBuffer(
-  buffer: Buffer,
-  filename: string,
-  folder: string,
-  contentType: string
-): Promise<string> {
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(`${folder}/${filename}`, buffer, {
-      access: "public",
-      contentType,
-    });
-    return blob.url;
-  }
+function getBlobPutOptions(contentType: string) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const storeId = process.env.BLOB_STORE_ID;
 
-  if (process.env.VERCEL) {
+  if (!token && !storeId) {
     throw new StorageError(
-      "File storage is not configured for production. Add BLOB_READ_WRITE_TOKEN in Vercel environment variables."
+      "Vercel Blob is not configured. Link a Blob store to this project or set BLOB_READ_WRITE_TOKEN."
     );
   }
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads", folder);
-  await mkdir(uploadsDir, { recursive: true });
-  await writeFile(path.join(uploadsDir, filename), buffer);
-  return `/uploads/${folder}/${filename}`;
+  return {
+    access: "public" as const,
+    contentType,
+    addRandomSuffix: true,
+    ...(token ? { token } : {}),
+    ...(storeId ? { storeId } : {}),
+  };
+}
+
+async function uploadBuffer(
+  buffer: Buffer,
+  pathname: string,
+  contentType: string
+): Promise<PutBlobResult> {
+  try {
+    return await put(pathname, buffer, getBlobPutOptions(contentType));
+  } catch (error) {
+    console.error("Vercel Blob upload failed:", error);
+    const message = error instanceof Error ? error.message : "Unknown blob error";
+    throw new StorageError(`Vercel Blob upload failed: ${message}`);
+  }
 }
 
 async function optimizeImage(buffer: Buffer, width: number): Promise<Buffer> {
@@ -95,7 +102,39 @@ async function optimizeImage(buffer: Buffer, width: number): Promise<Buffer> {
     .toBuffer();
 }
 
-export async function storeFileDetailed(file: File, folder: string): Promise<StoredFile> {
+async function optimizeHeroCover(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer)
+    .rotate()
+    .resize({
+      width: HERO_TARGET_WIDTH,
+      height: HERO_TARGET_HEIGHT,
+      fit: "cover",
+      position: "centre",
+    })
+    .webp({ quality: 85 })
+    .toBuffer();
+}
+
+export async function deleteBlobUrl(url: string) {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const storeId = process.env.BLOB_STORE_ID;
+  if (!token && !storeId) return;
+
+  try {
+    await del(url, {
+      ...(token ? { token } : {}),
+      ...(storeId ? { storeId } : {}),
+    });
+  } catch (error) {
+    console.warn("Blob delete failed:", error);
+  }
+}
+
+export async function storeFileDetailed(
+  file: File,
+  folder: string,
+  options: BlobUploadOptions = {}
+): Promise<StoredFile> {
   const mimeType = resolveMimeType(file);
   const isImage = isAllowedImage(mimeType);
   const maxSize = isImage ? MAX_IMAGE_BYTES : MAX_FILE_BYTES;
@@ -116,36 +155,75 @@ export async function storeFileDetailed(file: File, folder: string): Promise<Sto
       throw new StorageError("Unsupported file type. Allowed: JPG, JPEG, PNG, WEBP, PDF");
     }
     const bytes = Buffer.from(await file.arrayBuffer());
-    const filename = `${timestamp}-${safeFilename(file.name)}`;
-    const url = await uploadBuffer(bytes, filename, folder, mimeType);
-    return { url, mimeType, size: bytes.length };
+    const blob = await uploadBuffer(bytes, `${folder}/${timestamp}-${safeFilename(file.name)}`, mimeType);
+    return { url: blob.url, pathname: blob.pathname, mimeType, size: bytes.length };
   }
 
   const input = Buffer.from(await file.arrayBuffer());
+
+  if (options.raw) {
+    const blob = await uploadBuffer(input, `${folder}/${timestamp}-${safeFilename(file.name)}`, mimeType);
+    return { url: blob.url, pathname: blob.pathname, mimeType, size: input.length };
+  }
+
+  if (options.heroCover) {
+    const optimized = await optimizeHeroCover(input);
+    const blob = await uploadBuffer(optimized, `${folder}/${timestamp}-${baseName}-hero.webp`, "image/webp");
+    return {
+      url: blob.url,
+      pathname: blob.pathname,
+      mimeType: "image/webp",
+      size: optimized.length,
+    };
+  }
+
   const responsiveUrls: Record<string, string> = {};
   let mainUrl = "";
+  let mainPathname = "";
   let mainSize = 0;
 
   for (const width of RESPONSIVE_WIDTHS) {
     const optimized = await optimizeImage(input, width);
-    const filename = `${timestamp}-${baseName}-w${width}.webp`;
-    const url = await uploadBuffer(optimized, filename, folder, "image/webp");
-    responsiveUrls[String(width)] = url;
+    const blob = await uploadBuffer(
+      optimized,
+      `${folder}/${timestamp}-${baseName}-w${width}.webp`,
+      "image/webp"
+    );
+    responsiveUrls[String(width)] = blob.url;
     if (width === 1920 || !mainUrl) {
-      mainUrl = url;
+      mainUrl = blob.url;
+      mainPathname = blob.pathname;
       mainSize = optimized.length;
     }
   }
 
   return {
     url: mainUrl,
+    pathname: mainPathname,
     mimeType: "image/webp",
     size: mainSize,
     responsiveUrls,
   };
 }
 
-export async function storeUploadedFile(file: File, folder: string): Promise<string> {
-  const stored = await storeFileDetailed(file, folder);
+export async function storeUploadedFile(
+  file: File,
+  folder: string,
+  options?: BlobUploadOptions
+): Promise<string> {
+  const stored = await storeFileDetailed(file, folder, options);
   return stored.url;
+}
+
+export async function storeMultipleFiles(
+  files: File[],
+  folder: string
+): Promise<StoredFile[]> {
+  const results: StoredFile[] = [];
+  for (const file of files) {
+    if (file.size > 0) {
+      results.push(await storeFileDetailed(file, folder));
+    }
+  }
+  return results;
 }

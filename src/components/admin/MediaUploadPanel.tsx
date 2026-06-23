@@ -12,6 +12,7 @@ export function MediaUploadPanel({ locale }: MediaUploadPanelProps) {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [uploadedUrl, setUploadedUrl] = useState("");
   const isAr = locale === "ar";
 
   async function handleUpload(e: React.FormEvent<HTMLFormElement>) {
@@ -19,6 +20,7 @@ export function MediaUploadPanel({ locale }: MediaUploadPanelProps) {
     setUploading(true);
     setMessage("");
     setError("");
+    setUploadedUrl("");
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -40,7 +42,8 @@ export function MediaUploadPanel({ locale }: MediaUploadPanelProps) {
         setError(data.error ?? (isAr ? "فشل الرفع" : "Upload failed"));
         return;
       }
-      setMessage(isAr ? "تم رفع الملف بنجاح" : "File uploaded successfully");
+      setUploadedUrl(data.url);
+      setMessage(isAr ? "تم رفع الملف إلى Vercel Blob بنجاح" : "File uploaded to Vercel Blob successfully");
       form.reset();
     } catch {
       setError(isAr ? "حدث خطأ أثناء الرفع" : "Upload error");
@@ -53,17 +56,19 @@ export function MediaUploadPanel({ locale }: MediaUploadPanelProps) {
     <form onSubmit={handleUpload} className={formCardClass}>
       <p className="text-sm text-slate-600">
         {isAr
-          ? "ارفع صوراً، فيديوهات (MP4)، مقالات PDF، أو ملفات أخرى عن المدرسة والأنشطة"
-          : "Upload photos, videos (MP4), PDF articles, or other school activity files"}
+          ? "ارفع صوراً أو ملفات PDF — تُحفظ في Vercel Blob"
+          : "Upload images or PDF files — stored in Vercel Blob"}
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelClass}>{isAr ? "نوع المحتوى" : "Content folder"}</label>
+          <label className={labelClass}>{isAr ? "المجلد" : "Folder"}</label>
           <select name="folder" className={inputClass} defaultValue="media">
             <option value="media">{isAr ? "وسائط عامة" : "General media"}</option>
-            <option value="activities">{isAr ? "أنشطة" : "Activities"}</option>
             <option value="gallery">{isAr ? "معرض الصور" : "Gallery"}</option>
             <option value="articles">{isAr ? "مقالات" : "Articles"}</option>
+            <option value="teachers">{isAr ? "معلمون" : "Teachers"}</option>
+            <option value="covers">{isAr ? "أغلفة" : "Covers"}</option>
+            <option value="results">{isAr ? "نتائج" : "Results"}</option>
           </select>
         </div>
         <div>
@@ -72,13 +77,18 @@ export function MediaUploadPanel({ locale }: MediaUploadPanelProps) {
             name="file"
             type={InputTypes.FILE}
             required
-            accept="image/*,video/mp4,video/webm,application/pdf"
+            accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
             className={inputClass}
           />
         </div>
       </div>
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>}
       {message && <p className="mt-3 text-sm text-emerald-600">{message}</p>}
+      {uploadedUrl && (
+        <p className="mt-2 break-all text-xs text-slate-500">
+          URL: <a href={uploadedUrl} className="text-indigo-600 hover:underline" target="_blank" rel="noreferrer">{uploadedUrl}</a>
+        </p>
+      )}
       <button
         type="submit"
         disabled={uploading}

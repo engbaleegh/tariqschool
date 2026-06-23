@@ -3,6 +3,7 @@ export type FormActionState = {
   error?: string;
   fieldErrors?: Record<string, string>;
   values?: Record<string, string>;
+  redirectTo?: string;
 };
 
 export const initialFormState: FormActionState = { ok: false };
