@@ -30,7 +30,7 @@ export default async function ActivitiesPage({ params }: PageProps) {
                 key={item.id}
                 locale={locale}
                 item={item}
-                href={localePath(locale, `${Routes.ACTIVITIES}/${item.slug}`)}
+                href={localePath(locale, `${Routes.ACTIVITIES}/${item.slug ?? item.id}`)}
               />
             ))}
           </div>

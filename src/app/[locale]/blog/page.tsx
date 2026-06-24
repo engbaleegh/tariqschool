@@ -30,7 +30,7 @@ export default async function BlogPage({ params }: PageProps) {
                 key={item.id}
                 locale={locale}
                 item={item}
-                href={localePath(locale, `${Routes.BLOG}/${item.slug}`)}
+                href={localePath(locale, `${Routes.BLOG}/${item.slug ?? item.id}`)}
               />
             ))}
           </div>

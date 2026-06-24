@@ -6,32 +6,39 @@ import DataTable from "@/components/admin/DataTable";
 type Row = { id: string; title: string; date: string; status: string };
 
 type Props = {
+  locale: string;
   base: string;
   data: Row[];
+  emptyMessage?: string;
 };
 
-export function AnnouncementsAdminTable({ base, data }: Props) {
+export function AnnouncementsAdminTable({ locale, base, data, emptyMessage }: Props) {
+  const isAr = locale === "ar";
+
   return (
     <DataTable
+      locale={locale}
+      data={data}
+      emptyMessage={emptyMessage}
       columns={[
-        { key: "title", header: "Title" },
-        { key: "date", header: "Date" },
-        { key: "status", header: "Status" },
+        { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[40%]" },
+        { key: "date", header: isAr ? "التاريخ" : "Date", className: "w-[22%]" },
+        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[16%]" },
         {
           key: "actions",
-          header: "Actions",
+          header: isAr ? "إجراءات" : "Actions",
+          className: "w-[18%]",
           sortable: false,
           render: (row) => (
             <Link
               href={`${base}/${row.id}/edit`}
               className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
             >
-              Edit
+              {isAr ? "تعديل" : "Edit"}
             </Link>
           ),
         },
       ]}
-      data={data}
     />
   );
 }

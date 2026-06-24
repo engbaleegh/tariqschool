@@ -32,7 +32,7 @@ export const schoolInfo = {
 
 export const stats = [
   { value: "1,200+", labelEn: "Students", labelAr: "طالب وطالبة" },
-  { value: "85", labelEn: "Teachers", labelAr: "معلم ومعلمة" },
+  { value: "25", labelEn: "Teachers", labelAr: "معلم ومدرس" },
   { value: "56", labelEn: "Years Since Opening", labelAr: "عاماً منذ الافتتاح" },
   { value: "98%", labelEn: "Graduation Rate", labelAr: "نسبة التخرج" },
 ];

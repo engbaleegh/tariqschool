@@ -85,8 +85,21 @@ export function AnnouncementForm({
       </div>
 
       <FormActions
+        locale={locale}
         cancelHref={listHref}
-        submitLabel={pending ? (isAr ? "جاري الحفظ..." : "Saving...") : isAr ? "حفظ الإعلان" : "Save announcement"}
+        submitLabel={
+          pending
+            ? isAr
+              ? "جاري الحفظ..."
+              : "Saving..."
+            : mode === "create"
+              ? isAr
+                ? "إضافة"
+                : "Add"
+              : isAr
+                ? "حفظ الإعلان"
+                : "Save announcement"
+        }
       />
     </form>
   );

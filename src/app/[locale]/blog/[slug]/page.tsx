@@ -25,7 +25,10 @@ export default async function BlogDetailPage({
 
   try {
     const item = await db.article.findFirst({
-      where: { slug, isPublished: true },
+      where: {
+        isPublished: true,
+        OR: [{ slug }, { id: slug }],
+      },
     });
     if (item) {
       title = isAr ? item.titleAr ?? item.title : item.title;
@@ -38,7 +41,7 @@ export default async function BlogDetailPage({
   }
 
   if (!title) {
-    const fallback = placeholderPosts.find((p) => p.slug === slug);
+    const fallback = placeholderPosts.find((p) => p.slug === slug || p.id === slug);
     if (!fallback) notFound();
     title = getLocalizedField(fallback, "title", locale);
     content = getLocalizedField(fallback, "excerpt", locale);

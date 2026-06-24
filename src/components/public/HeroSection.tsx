@@ -39,7 +39,7 @@ export function HeroSection({
       style={
         coverImage
           ? {
-              backgroundImage: `linear-gradient(to bottom right, rgba(30, 58, 138, 0.88), rgba(30, 64, 175, 0.82), rgba(6, 78, 59, 0.8)), url(${coverImage})`,
+              backgroundImage: `linear-gradient(to bottom right, rgba(30, 58, 138, 0.42), rgba(30, 64, 175, 0.38), rgba(6, 78, 59, 0.35)), url(${coverImage})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }

@@ -99,8 +99,13 @@ export const authOptions: NextAuthOptions = {
               };
             }
           }
+
+          const userCount = await db.user.count();
+          if (userCount > 0) {
+            return null;
+          }
         } catch {
-          // Database unavailable — fall through to bootstrap admin
+          // Database unavailable — fall through to bootstrap admin for initial setup
         }
 
         const bootstrapEmail =

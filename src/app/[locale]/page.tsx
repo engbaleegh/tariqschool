@@ -15,13 +15,17 @@ import { ContentCard } from "@/components/public/ContentCard";
 import { StatsSection } from "@/components/public/StatsSection";
 import { NewsTicker } from "@/components/public/NewsTicker";
 import {
-  activities,
   getTranslations,
   localePath,
   schoolInfo,
 } from "@/constants/public-content";
 import { Routes } from "@/constants/enums";
-import { getPublishedAnnouncements, getPublishedEvents, getPublishedResults, getActiveGraduates } from "@/lib/db-content";
+import {
+  getPublishedAnnouncements,
+  getPublishedEvents,
+  getPublishedResults,
+  getActiveGraduates,
+} from "@/lib/db-content";
 import { getHeroCoverImage } from "@/lib/school-settings";
 import { HomeResultsSection } from "@/components/public/ResultsList";
 import { HomeGraduatesSection } from "@/components/public/HomeGraduatesSection";
@@ -166,12 +170,12 @@ export default async function HomePage({
             action={{ label: t.viewAll, href: localePath(typedLocale, Routes.ACTIVITIES) }}
           />
           <div className="mt-8 grid gap-6 md:grid-cols-2">
-            {activities.slice(0, 2).map((item) => (
+            {dbEvents.slice(0, 2).map((item) => (
               <ContentCard
                 key={item.id}
                 locale={typedLocale}
                 item={item}
-                href={localePath(typedLocale, `${Routes.ACTIVITIES}/${item.slug}`)}
+                href={localePath(typedLocale, `${Routes.ACTIVITIES}/${item.slug ?? item.id}`)}
               />
             ))}
           </div>

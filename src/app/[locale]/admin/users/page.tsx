@@ -1,12 +1,16 @@
 import PageHeader from "@/components/admin/PageHeader";
-import DataTable from "@/components/admin/DataTable";
+import { UsersAdminTable } from "@/components/admin/tables/UsersAdminTable";
+import { Routes } from "@/constants/enums";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
 
-type PageProps = { params: Promise<{ locale: Locale }> };
+type PageProps = { params: Promise<{ locale: Locale }>; searchParams?: Promise<{ saved?: string }> };
 
-export default async function AdminUsersPage({ params }: PageProps) {
-  await params;
+export default async function AdminUsersPage({ params, searchParams }: PageProps) {
+  const { locale } = await params;
+  const query = (await searchParams) ?? {};
+  const isAr = locale === "ar";
+  const base = `/${locale}/${Routes.ADMIN}/users`;
 
   let rows: { id: string; name: string; email: string; role: string; status: string }[] = [];
   try {
@@ -16,7 +20,7 @@ export default async function AdminUsersPage({ params }: PageProps) {
       name: item.name,
       email: item.email,
       role: item.role,
-      status: item.isActive ? "Active" : "Inactive",
+      status: item.isActive ? (isAr ? "نشط" : "Active") : isAr ? "غير نشط" : "Inactive",
     }));
   } catch {
     rows = [];
@@ -24,15 +28,21 @@ export default async function AdminUsersPage({ params }: PageProps) {
 
   return (
     <div>
-      <PageHeader title="Users" description="Admin and editor accounts." />
-      <DataTable
-        columns={[
-          { key: "name", header: "Name" },
-          { key: "email", header: "Email" },
-          { key: "role", header: "Role" },
-          { key: "status", header: "Status" },
-        ]}
+      <PageHeader
+        title={isAr ? "المستخدمون" : "Users"}
+        description={isAr ? "إدارة حسابات لوحة التحكم" : "Manage admin panel accounts."}
+        action={{ label: isAr ? "إضافة مستخدم" : "Add user", href: `${base}/new` }}
+      />
+      {query.saved === "1" && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          {isAr ? "تم حفظ المستخدم بنجاح" : "User saved successfully"}
+        </p>
+      )}
+      <UsersAdminTable
+        locale={locale}
+        base={base}
         data={rows}
+        emptyMessage={isAr ? "لا يوجد مستخدمون بعد" : "No users yet"}
       />
     </div>
   );

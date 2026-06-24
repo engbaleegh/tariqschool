@@ -29,7 +29,7 @@ export default async function GalleryPage({ params }: PageProps) {
             {albums.map((album) => (
               <Link
                 key={album.id}
-                href={localePath(locale, `${Routes.GALLERY}/${album.slug}`)}
+                href={localePath(locale, `${Routes.GALLERY}/${album.id}`)}
                 className="card group overflow-hidden transition hover:shadow-lg"
               >
                 <div className="flex h-40 items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 text-4xl">
