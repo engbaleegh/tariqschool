@@ -2,18 +2,12 @@
 
 import { db } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
-import {
-  updateLocalTeacher,
-  deleteLocalTeacher,
-  isLocalTeacherId,
-} from "@/lib/local-teachers";
 import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType, deleteBlobUrl } from "@/lib/storage";
 import { type FormActionState, t } from "@/lib/action-state";
 import { withFormValues } from "@/lib/form-values";
 import { resolveBilingualField } from "@/lib/utils";
 import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 const TEACHER_FORM_KEYS = [
   "fullName",
@@ -152,6 +146,21 @@ export async function updateTeacher(
     );
   }
 
+  if (id.startsWith("local-")) {
+    return withFormValues(
+      {
+        ok: false,
+        error: t(
+          locale,
+          "هذا المعلم محفوظ محلياً ولا يمكن تعديله. أضف معلماً جديداً من قاعدة البيانات.",
+          "This teacher was stored locally and cannot be edited. Please add a new teacher."
+        ),
+      },
+      formData,
+      TEACHER_FORM_KEYS
+    );
+  }
+
   try {
     const data = await parseTeacherForm(formData);
 
@@ -166,17 +175,13 @@ export async function updateTeacher(
       );
     }
 
-    if (isLocalTeacherId(id)) {
-      await updateLocalTeacher(id, data);
-    } else {
-      const teacher = await db.teacher.update({ where: { id }, data });
-      await createAuditLog({
-        action: "UPDATE",
-        entity: "Teacher",
-        entityId: id,
-        details: { fullName: teacher.fullName },
-      });
-    }
+    const teacher = await db.teacher.update({ where: { id }, data });
+    await createAuditLog({
+      action: "UPDATE",
+      entity: "Teacher",
+      entityId: id,
+      details: { fullName: teacher.fullName },
+    });
 
     revalidatePath(`/${locale}/admin/teachers`);
     revalidatePath(`/${locale}/teachers`);
@@ -204,17 +209,44 @@ export async function updateTeacher(
   }
 }
 
-export async function deleteTeacher(id: string, locale: string) {
-  await assertAdminSession();
+export type DeleteTeacherResult = { ok: true } | { ok: false; error: string };
 
-  if (isLocalTeacherId(id)) {
-    await deleteLocalTeacher(id);
-  } else {
-    await db.teacher.delete({ where: { id } });
-    await createAuditLog({ action: "DELETE", entity: "Teacher", entityId: id });
+export async function deleteTeacherAction(id: string, locale: string): Promise<DeleteTeacherResult> {
+  const isAr = locale === "ar";
+
+  try {
+    await assertAdminSession();
+  } catch {
+    return { ok: false, error: isAr ? "غير مصرح" : "Unauthorized" };
   }
 
-  revalidatePath(`/${locale}/admin/teachers`);
-  revalidatePath(`/${locale}/teachers`);
-  redirect(`/${locale}/admin/teachers`);
+  if (id.startsWith("local-")) {
+    return {
+      ok: false,
+      error: isAr
+        ? "لا يمكن حذف معلم محفوظ محلياً على الخادم. أعد تحميل الصفحة."
+        : "Cannot delete a locally stored teacher on the server. Refresh the page.",
+    };
+  }
+
+  try {
+    const teacher = await db.teacher.findUnique({ where: { id } });
+    if (!teacher) {
+      return { ok: false, error: isAr ? "المعلم غير موجود" : "Teacher not found" };
+    }
+
+    if (teacher.photo) {
+      await deleteBlobUrl(teacher.photo);
+    }
+
+    await db.teacher.delete({ where: { id } });
+    await createAuditLog({ action: "DELETE", entity: "Teacher", entityId: id });
+
+    revalidatePath(`/${locale}/admin/teachers`);
+    revalidatePath(`/${locale}/teachers`);
+    return { ok: true };
+  } catch (error) {
+    console.error("deleteTeacherAction:", error);
+    return { ok: false, error: isAr ? "تعذر حذف المعلم" : "Could not delete teacher" };
+  }
 }

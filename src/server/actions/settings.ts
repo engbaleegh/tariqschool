@@ -3,7 +3,6 @@
 import { db } from "@/lib/prisma";
 import { SETTING_KEYS } from "@/constants/site";
 import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType, deleteBlobUrl } from "@/lib/storage";
-import { setLocalSetting } from "@/lib/local-settings";
 import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
 
@@ -56,19 +55,15 @@ export async function updateHeroCover(
       };
     }
 
-    try {
-      await db.setting.upsert({
-        where: { key: SETTING_KEYS.HERO_COVER },
-        update: { value: imageUrl },
-        create: {
-          key: SETTING_KEYS.HERO_COVER,
-          value: imageUrl,
-          group: "homepage",
-        },
-      });
-    } catch {
-      await setLocalSetting(SETTING_KEYS.HERO_COVER, imageUrl);
-    }
+    await db.setting.upsert({
+      where: { key: SETTING_KEYS.HERO_COVER },
+      update: { value: imageUrl },
+      create: {
+        key: SETTING_KEYS.HERO_COVER,
+        value: imageUrl,
+        group: "homepage",
+      },
+    });
 
     revalidatePath(`/${locale}`);
     revalidatePath(`/${locale}/admin/homepage`);

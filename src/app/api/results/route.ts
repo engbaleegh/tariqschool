@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
-import { getLocalPublishedResults } from "@/lib/local-results";
 
 export async function GET() {
   try {
@@ -8,13 +7,8 @@ export async function GET() {
       where: { isPublished: true },
       orderBy: { createdAt: "desc" },
     });
-    if (results.length) {
-      return NextResponse.json({ results });
-    }
+    return NextResponse.json({ results });
   } catch {
-    // fall through
+    return NextResponse.json({ results: [] });
   }
-
-  const localResults = await getLocalPublishedResults();
-  return NextResponse.json({ results: localResults });
 }

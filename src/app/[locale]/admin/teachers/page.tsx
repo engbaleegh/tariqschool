@@ -3,14 +3,15 @@ import { TeachersAdminTable } from "@/components/admin/tables/TeachersAdminTable
 import { Routes } from "@/constants/enums";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
-import { getAllLocalTeachers } from "@/lib/local-teachers";
 
 type TeachersPageProps = {
   params: Promise<{ locale: Locale }>;
+  searchParams?: Promise<{ saved?: string; deleted?: string }>;
 };
 
-export default async function TeachersPage({ params }: TeachersPageProps) {
+export default async function TeachersPage({ params, searchParams }: TeachersPageProps) {
   const { locale } = await params;
+  const query = (await searchParams) ?? {};
   const isAr = locale === "ar";
   const base = `/${locale}/${Routes.ADMIN}/${Routes.TEACHERS}`;
 
@@ -29,17 +30,6 @@ export default async function TeachersPage({ params }: TeachersPageProps) {
     rows = [];
   }
 
-  const localTeachers = await getAllLocalTeachers();
-  const localRows = localTeachers.map((item) => ({
-    id: item.id,
-    name: item.fullNameAr ?? item.fullName,
-    department: item.departmentAr ?? item.department ?? "—",
-    email: item.email ?? "—",
-    status: item.isActive ? (isAr ? "نشط" : "Active") : isAr ? "غير نشط" : "Inactive",
-  }));
-
-  rows = [...rows, ...localRows.filter((lt) => !rows.some((r) => r.id === lt.id))];
-
   return (
     <div>
       <PageHeader
@@ -49,6 +39,16 @@ export default async function TeachersPage({ params }: TeachersPageProps) {
         }
         action={{ label: isAr ? "إضافة معلم" : "Add teacher", href: `${base}/new` }}
       />
+      {query.saved === "1" && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          {isAr ? "تم حفظ المعلم بنجاح" : "Teacher saved successfully"}
+        </p>
+      )}
+      {query.deleted === "1" && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          {isAr ? "تم حذف المعلم بنجاح" : "Teacher deleted successfully"}
+        </p>
+      )}
       <TeachersAdminTable
         locale={locale}
         base={base}

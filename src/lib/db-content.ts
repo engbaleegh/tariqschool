@@ -1,6 +1,4 @@
 import { db } from "@/lib/prisma";
-import { getAllLocalTeachers } from "@/lib/local-teachers";
-import { getLocalPublishedResults } from "@/lib/local-results";
 import type { LocalizedItem } from "@/constants/public-content";
 import {
   announcements as fallbackAnnouncements,
@@ -89,24 +87,16 @@ export async function getPublishedEvents() {
 }
 
 export async function getActiveTeachers() {
-  let dbTeachers: Awaited<ReturnType<typeof mapTeachers>> = [];
   try {
     const rows = await db.teacher.findMany({
       where: { isActive: true },
       orderBy: { order: "asc" },
     });
-    if (rows.length) dbTeachers = mapTeachers(rows);
+    if (rows.length) return mapTeachers(rows);
   } catch {
     // DB unavailable
   }
 
-  const localRows = await getAllLocalTeachers();
-  const localActive = mapTeachers(
-    localRows.filter((t) => t.isActive).map((t) => ({ ...t, fullName: t.fullName }))
-  );
-
-  const merged = [...dbTeachers, ...localActive.filter((lt) => !dbTeachers.some((d) => d.id === lt.id))];
-  if (merged.length) return merged;
   return fallbackTeachers;
 }
 
@@ -319,31 +309,17 @@ export async function getFaqs() {
 }
 
 export async function getPublishedResults() {
-  let dbResults: Awaited<ReturnType<typeof mapSchoolResults>> = [];
   try {
     const rows = await db.schoolResult.findMany({
       where: { isPublished: true },
       orderBy: { createdAt: "desc" },
     });
-    if (rows.length) dbResults = mapSchoolResults(rows);
+    if (rows.length) return mapSchoolResults(rows);
   } catch {
     // DB unavailable
   }
 
-  const localResults = await getLocalPublishedResults();
-  const mappedLocal = mapSchoolResults(
-    localResults.map((r) => ({
-      ...r,
-      createdAt: new Date(r.createdAt),
-      fileType: r.fileType as "PDF" | "IMAGE",
-    }))
-  );
-
-  const merged = [
-    ...dbResults,
-    ...mappedLocal.filter((lr) => !dbResults.some((d) => d.id === lr.id)),
-  ];
-  return merged;
+  return [];
 }
 
 function mapSchoolResults(

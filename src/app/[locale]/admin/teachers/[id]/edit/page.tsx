@@ -3,7 +3,6 @@ import PageHeader from "@/components/admin/PageHeader";
 import { TeacherForm } from "@/components/admin/TeacherForm";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
-import { getLocalTeacherById, isLocalTeacherId } from "@/lib/local-teachers";
 
 type EditTeacherPageProps = {
   params: Promise<{ locale: Locale; id: string }>;
@@ -13,15 +12,15 @@ export default async function EditTeacherPage({ params }: EditTeacherPageProps) 
   const { locale, id } = await params;
   const isAr = locale === "ar";
 
+  if (id.startsWith("local-")) {
+    notFound();
+  }
+
   let teacher = null;
-  if (isLocalTeacherId(id)) {
-    teacher = await getLocalTeacherById(id);
-  } else {
-    try {
-      teacher = await db.teacher.findUnique({ where: { id } });
-    } catch {
-      teacher = await getLocalTeacherById(id);
-    }
+  try {
+    teacher = await db.teacher.findUnique({ where: { id } });
+  } catch {
+    teacher = null;
   }
 
   if (!teacher) notFound();
