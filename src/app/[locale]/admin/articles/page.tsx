@@ -1,6 +1,5 @@
-import Link from "next/link";
 import PageHeader from "@/components/admin/PageHeader";
-import DataTable from "@/components/admin/DataTable";
+import { ArticlesAdminTable } from "@/components/admin/tables/ArticlesAdminTable";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
 import { getLocalizedField } from "@/lib/utils";
@@ -34,27 +33,9 @@ export default async function AdminArticlesPage({ params }: PageProps) {
         }
         action={{ label: isAr ? "مقال جديد" : "New article", href: `${base}/new` }}
       />
-      <DataTable
+      <ArticlesAdminTable
         locale={locale}
-        columns={[
-          { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[40%]" },
-          { key: "date", header: isAr ? "التاريخ" : "Date", className: "w-[20%]" },
-          { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[15%]" },
-          {
-            key: "actions",
-            header: isAr ? "إجراءات" : "Actions",
-            className: "w-[15%]",
-            sortable: false,
-            render: (row) => (
-              <Link
-                href={`${base}/${row.id}/edit`}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-              >
-                {isAr ? "تعديل" : "Edit"}
-              </Link>
-            ),
-          },
-        ]}
+        base={base}
         data={rows}
         emptyMessage={isAr ? "لا توجد مقالات بعد" : "No articles yet"}
       />

@@ -1,6 +1,5 @@
-import Link from "next/link";
 import PageHeader from "@/components/admin/PageHeader";
-import DataTable from "@/components/admin/DataTable";
+import { GalleryAdminTable } from "@/components/admin/tables/GalleryAdminTable";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
 import { getLocalizedField } from "@/lib/utils";
@@ -40,28 +39,9 @@ export default async function AdminGalleryPage({ params }: PageProps) {
         }
         action={{ label: isAr ? "ألبوم جديد" : "New album", href: `${base}/new` }}
       />
-      <DataTable
+      <GalleryAdminTable
         locale={locale}
-        columns={[
-          { key: "title", header: isAr ? "الألبوم" : "Album", className: "w-[30%]" },
-          { key: "category", header: isAr ? "التصنيف" : "Category", className: "w-[18%]" },
-          { key: "count", header: isAr ? "الصور" : "Images", className: "w-[10%]" },
-          { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[12%]" },
-          {
-            key: "actions",
-            header: isAr ? "إجراءات" : "Actions",
-            className: "w-[15%]",
-            sortable: false,
-            render: (row) => (
-              <Link
-                href={`${base}/${row.id}/edit`}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-              >
-                {isAr ? "تعديل" : "Edit"}
-              </Link>
-            ),
-          },
-        ]}
+        base={base}
         data={rows}
         emptyMessage={isAr ? "لا توجد ألبومات بعد" : "No albums yet"}
       />

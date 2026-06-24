@@ -1,5 +1,5 @@
 import PageHeader from "@/components/admin/PageHeader";
-import DataTable from "@/components/admin/DataTable";
+import { MediaAdminTable } from "@/components/admin/tables/MediaAdminTable";
 import { MediaUploadPanel } from "@/components/admin/MediaUploadPanel";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
@@ -35,24 +35,7 @@ export default async function AdminMediaPage({ params }: PageProps) {
         }
       />
       <MediaUploadPanel locale={locale} />
-      <DataTable
-        columns={[
-          { key: "filename", header: locale === "ar" ? "الملف" : "File" },
-          { key: "type", header: locale === "ar" ? "النوع" : "Type" },
-          { key: "size", header: locale === "ar" ? "الحجم" : "Size" },
-          { key: "date", header: locale === "ar" ? "التاريخ" : "Date" },
-          {
-            key: "url",
-            header: locale === "ar" ? "رابط" : "Link",
-            render: (row) => (
-              <a href={String(row.url)} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                {locale === "ar" ? "فتح" : "Open"}
-              </a>
-            ),
-          },
-        ]}
-        data={rows}
-      />
+      <MediaAdminTable locale={locale} data={rows} />
     </div>
   );
 }

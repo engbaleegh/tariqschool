@@ -1,7 +1,5 @@
-import Link from "next/link";
 import PageHeader from "@/components/admin/PageHeader";
-import DataTable from "@/components/admin/DataTable";
-import { DeleteTeacherButton } from "@/components/admin/DeleteTeacherButton";
+import { TeachersAdminTable } from "@/components/admin/tables/TeachersAdminTable";
 import { Routes } from "@/constants/enums";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
@@ -51,33 +49,11 @@ export default async function TeachersPage({ params }: TeachersPageProps) {
         }
         action={{ label: isAr ? "إضافة معلم" : "Add teacher", href: `${base}/new` }}
       />
-      <DataTable
+      <TeachersAdminTable
         locale={locale}
-        emptyMessage={isAr ? "لا يوجد معلمون بعد. أضف معلماً جديداً." : "No teachers yet. Add a new teacher."}
-        columns={[
-          { key: "name", header: isAr ? "الاسم" : "Name", className: "w-[24%]" },
-          { key: "department", header: isAr ? "القسم" : "Department", className: "w-[20%]" },
-          { key: "email", header: isAr ? "البريد" : "Email", className: "w-[24%]" },
-          { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[12%]" },
-          {
-            key: "actions",
-            header: isAr ? "إجراءات" : "Actions",
-            className: "w-[20%]",
-            sortable: false,
-            render: (row) => (
-              <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href={`${base}/${row.id}/edit`}
-                  className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-                >
-                  {isAr ? "تعديل" : "Edit"}
-                </Link>
-                <DeleteTeacherButton id={row.id as string} locale={locale} />
-              </div>
-            ),
-          },
-        ]}
+        base={base}
         data={rows}
+        emptyMessage={isAr ? "لا يوجد معلمون بعد. أضف معلماً جديداً." : "No teachers yet. Add a new teacher."}
       />
     </div>
   );

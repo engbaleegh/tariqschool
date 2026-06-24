@@ -1,6 +1,5 @@
-import Link from "next/link";
 import PageHeader from "@/components/admin/PageHeader";
-import DataTable from "@/components/admin/DataTable";
+import { AnnouncementsAdminTable } from "@/components/admin/tables/AnnouncementsAdminTable";
 import { Routes } from "@/constants/enums";
 import type { Locale } from "@/i18n.config";
 import { db } from "@/lib/prisma";
@@ -33,23 +32,7 @@ export default async function AnnouncementsPage({ params }: AnnouncementsPagePro
         description="Publish school-wide notices and updates."
         action={{ label: "New announcement", href: `${base}/new` }}
       />
-      <DataTable
-        columns={[
-          { key: "title", header: "Title" },
-          { key: "date", header: "Date" },
-          { key: "status", header: "Status" },
-          {
-            key: "actions",
-            header: "Actions",
-            render: (row) => (
-              <Link href={`${base}/${row.id}/edit`} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                Edit
-              </Link>
-            ),
-          },
-        ]}
-        data={rows}
-      />
+      <AnnouncementsAdminTable base={base} data={rows} />
     </div>
   );
 }
