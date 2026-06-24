@@ -62,21 +62,20 @@ function safeFilename(name: string) {
 }
 
 function getBlobPutOptions(contentType: string) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  const storeId = process.env.BLOB_STORE_ID;
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
 
-  if (!token && !storeId) {
+  if (!token) {
     throw new StorageError(
-      "Vercel Blob is not configured. Link a Blob store to this project or set BLOB_READ_WRITE_TOKEN."
+      "Vercel Blob is not configured. Link a public Blob store to this project (BLOB_READ_WRITE_TOKEN)."
     );
   }
 
+  // Use only BLOB_READ_WRITE_TOKEN — do not mix with BLOB_STORE_ID from a different store.
   return {
     access: "public" as const,
     contentType,
     addRandomSuffix: true,
-    ...(token ? { token } : {}),
-    ...(storeId ? { storeId } : {}),
+    token,
   };
 }
 
@@ -116,15 +115,11 @@ async function optimizeHeroCover(buffer: Buffer): Promise<Buffer> {
 }
 
 export async function deleteBlobUrl(url: string) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  const storeId = process.env.BLOB_STORE_ID;
-  if (!token && !storeId) return;
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
+  if (!token) return;
 
   try {
-    await del(url, {
-      ...(token ? { token } : {}),
-      ...(storeId ? { storeId } : {}),
-    });
+    await del(url, { token });
   } catch (error) {
     console.warn("Blob delete failed:", error);
   }
