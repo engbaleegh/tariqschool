@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Locale } from "@/i18n.config";
 import { HeroSection } from "@/components/public/HeroSection";
@@ -60,16 +59,15 @@ export default async function BlogDetailPage({
             </time>
           )}
           {featuredImage && (
-            <div className="relative mt-6 aspect-video overflow-hidden rounded-xl border border-slate-200">
-              <Image
+            <figure className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={featuredImage}
                 alt={title}
-                fill
-                className="object-cover"
-                unoptimized
-                priority
+                className="mx-auto block h-auto w-full max-w-full object-contain"
+                loading="eager"
               />
-            </div>
+            </figure>
           )}
           <div className="prose-school mt-6 whitespace-pre-wrap">{content}</div>
           <Link
