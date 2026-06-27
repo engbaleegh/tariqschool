@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n.config";
 import { HeroSection } from "@/components/public/HeroSection";
 import { blogPosts as placeholderPosts, getTranslations, localePath } from "@/constants/public-content";
 import { Routes } from "@/constants/enums";
-import { formatDate, getLocalizedField } from "@/lib/utils";
+import { formatDate, getLocalizedField, decodeRouteParam } from "@/lib/utils";
 import { db } from "@/lib/prisma";
 
 export default async function BlogDetailPage({
@@ -13,7 +13,8 @@ export default async function BlogDetailPage({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { locale, slug } = await params;
+  const { locale, slug: rawSlug } = await params;
+  const slug = decodeRouteParam(rawSlug);
   const typedLocale = locale as Locale;
   const t = getTranslations(typedLocale);
   const isAr = typedLocale === "ar";

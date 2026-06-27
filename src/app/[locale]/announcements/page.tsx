@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n.config";
 import { Routes } from "@/constants/enums";
-import { getTranslations, localePath } from "@/constants/public-content";
+import { contentDetailPath, getTranslations } from "@/constants/public-content";
 import { HeroSection } from "@/components/public/HeroSection";
 import { SectionHeading } from "@/components/public/SectionHeading";
 import { ContentCard } from "@/components/public/ContentCard";
@@ -30,7 +30,7 @@ export default async function AnnouncementsPage({ params }: PageProps) {
                 key={item.id}
                 locale={locale}
                 item={item}
-                href={localePath(locale, `${Routes.ANNOUNCEMENTS}/${item.slug}`)}
+                href={contentDetailPath(locale, Routes.ANNOUNCEMENTS, item)}
               />
             ))}
           </div>

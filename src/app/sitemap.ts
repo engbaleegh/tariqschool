@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { db } from "@/lib/prisma";
+import { contentUrlSegment } from "@/lib/utils";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
@@ -24,26 +25,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const [announcements, articles, events] = await Promise.all([
-      db.announcement.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-      db.article.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-      db.event.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
+      db.announcement.findMany({ where: { isPublished: true }, select: { id: true, slug: true, updatedAt: true } }),
+      db.article.findMany({ where: { isPublished: true }, select: { id: true, slug: true, updatedAt: true } }),
+      db.event.findMany({ where: { isPublished: true }, select: { id: true, slug: true, updatedAt: true } }),
     ]);
 
     const dynamicRoutes = locales.flatMap((locale) => [
       ...announcements.map((a) => ({
-        url: `${baseUrl}/${locale}/announcements/${a.slug}`,
+        url: `${baseUrl}/${locale}/announcements/${contentUrlSegment(a)}`,
         lastModified: a.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.6,
       })),
       ...articles.map((a) => ({
-        url: `${baseUrl}/${locale}/blog/${a.slug}`,
+        url: `${baseUrl}/${locale}/blog/${contentUrlSegment(a)}`,
         lastModified: a.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.6,
       })),
       ...events.map((e) => ({
-        url: `${baseUrl}/${locale}/activities/${e.slug}`,
+        url: `${baseUrl}/${locale}/activities/${contentUrlSegment(e)}`,
         lastModified: e.updatedAt,
         changeFrequency: "monthly" as const,
         priority: 0.6,

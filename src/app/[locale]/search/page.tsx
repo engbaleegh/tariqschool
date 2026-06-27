@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n.config";
 import { Routes } from "@/constants/enums";
-import { getTranslations, localePath } from "@/constants/public-content";
+import { contentDetailPath, getTranslations } from "@/constants/public-content";
 import { HeroSection } from "@/components/public/HeroSection";
 import { SearchBar } from "@/components/public/SearchBar";
 import { ContentCard } from "@/components/public/ContentCard";
@@ -105,11 +105,10 @@ export default async function SearchPage({ params, searchParams }: PageProps) {
                       key={`${item.type}-${item.id}`}
                       locale={locale}
                       item={item}
-                      href={localePath(
+                      href={contentDetailPath(
                         locale,
-                        item.type === "announcement"
-                          ? `${Routes.ANNOUNCEMENTS}/${item.slug}`
-                          : `${Routes.BLOG}/${item.slug}`
+                        item.type === "announcement" ? Routes.ANNOUNCEMENTS : Routes.BLOG,
+                        item
                       )}
                     />
                   ))}

@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n.config";
+import { contentUrlSegment } from "@/lib/utils";
 
 export type LocalizedItem = {
   id: string;
@@ -323,4 +324,12 @@ export function getTranslations(locale: Locale) {
 export function localePath(locale: Locale, path = "") {
   const base = `/${locale}`;
   return path ? `${base}/${path}` : base;
+}
+
+export function contentDetailPath(
+  locale: Locale,
+  section: string,
+  item: Pick<LocalizedItem, "id" | "slug">
+): string {
+  return localePath(locale, `${section}/${contentUrlSegment(item)}`);
 }

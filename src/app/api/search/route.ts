@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { contentUrlSegment } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request);
@@ -47,17 +48,17 @@ export async function GET(request: NextRequest) {
       announcements: announcements.map((a) => ({
         ...a,
         type: "announcement",
-        href: `/${locale}/announcements/${a.slug}`,
+        href: `/${locale}/announcements/${contentUrlSegment(a)}`,
       })),
       articles: articles.map((a) => ({
         ...a,
         type: "article",
-        href: `/${locale}/blog/${a.slug}`,
+        href: `/${locale}/blog/${contentUrlSegment(a)}`,
       })),
       events: events.map((e) => ({
         ...e,
         type: "event",
-        href: `/${locale}/activities/${e.slug}`,
+        href: `/${locale}/activities/${contentUrlSegment(e)}`,
       })),
       teachers: teachers.map((t) => ({
         ...t,

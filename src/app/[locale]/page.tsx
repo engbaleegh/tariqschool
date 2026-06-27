@@ -17,6 +17,7 @@ import { NewsTicker } from "@/components/public/NewsTicker";
 import {
   getTranslations,
   localePath,
+  contentDetailPath,
   schoolInfo,
 } from "@/constants/public-content";
 import { Routes } from "@/constants/enums";
@@ -94,7 +95,7 @@ export default async function HomePage({
                 key={item.id}
                 locale={typedLocale}
                 item={item}
-                href={localePath(typedLocale, `${Routes.ANNOUNCEMENTS}/${item.slug}`)}
+                href={contentDetailPath(typedLocale, Routes.ANNOUNCEMENTS, item)}
               />
             ))}
           </div>
@@ -175,7 +176,7 @@ export default async function HomePage({
                 key={item.id}
                 locale={typedLocale}
                 item={item}
-                href={localePath(typedLocale, `${Routes.ACTIVITIES}/${item.slug ?? item.id}`)}
+                href={contentDetailPath(typedLocale, Routes.ACTIVITIES, item)}
               />
             ))}
           </div>

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
-import { slugify, resolveBilingualField } from "@/lib/utils";
+import { slugify, slugifyAscii, resolveBilingualField } from "@/lib/utils";
 import { type FormActionState, t } from "@/lib/action-state";
 import { revalidatePath } from "next/cache";
 
@@ -22,7 +22,7 @@ function parseAnnouncementForm(formData: FormData) {
   return {
     title,
     titleAr: String(formData.get("titleAr") ?? "").trim() || title,
-    slug: slugInput || slugify(title),
+    slug: slugInput || slugifyAscii(title) || slugifyAscii(String(formData.get("titleAr") ?? "")) || slugify(title),
     content,
     contentAr: String(formData.get("contentAr") ?? "").trim() || content,
     excerpt: String(formData.get("excerpt") ?? "").trim() || null,

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
-import { slugify, resolveBilingualField } from "@/lib/utils";
+import { slugify, slugifyAscii, resolveBilingualField } from "@/lib/utils";
 import { type FormActionState, t } from "@/lib/action-state";
 import { withFormValues } from "@/lib/form-values";
 import { storeFileDetailed, isAllowedImage, StorageError, resolveMimeType, deleteBlobUrl } from "@/lib/storage";
@@ -72,8 +72,8 @@ async function parseFeaturedImage(formData: FormData, existing?: string | null) 
   return featuredImage;
 }
 
-async function uniqueSlug(title: string, excludeId?: string) {
-  const baseSlug = slugify(title) || "article";
+async function uniqueSlug(title: string, titleAr?: string, excludeId?: string) {
+  const baseSlug = slugifyAscii(title) || slugifyAscii(titleAr ?? "") || slugify(title) || "article";
   let suffix = 0;
 
   while (true) {
@@ -119,7 +119,7 @@ export async function createArticle(
     }
 
     const featuredImage = await parseFeaturedImage(formData);
-    const slug = await uniqueSlug(parsed.title);
+    const slug = await uniqueSlug(parsed.title, parsed.titleAr);
 
     const article = await db.article.create({
       data: { ...parsed, featuredImage, slug },
@@ -202,7 +202,7 @@ export async function updateArticle(
       data: {
         ...parsed,
         featuredImage,
-        slug: await uniqueSlug(parsed.title, id),
+        slug: await uniqueSlug(parsed.title, parsed.titleAr, id),
       },
     });
 

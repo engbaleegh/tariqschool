@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Locale } from "@/i18n.config";
 import { Routes } from "@/constants/enums";
 import { getTranslations, localePath } from "@/constants/public-content";
-import { formatDate, getLocalizedField } from "@/lib/utils";
+import { formatDate, getLocalizedField, decodeRouteParam } from "@/lib/utils";
 import { HeroSection } from "@/components/public/HeroSection";
 import { getPublishedAnnouncements } from "@/lib/db-content";
 import { db } from "@/lib/prisma";
@@ -13,7 +13,8 @@ type PageProps = {
 };
 
 export default async function AnnouncementDetailPage({ params }: PageProps) {
-  const { locale, slug } = await params;
+  const { locale, slug: rawSlug } = await params;
+  const slug = decodeRouteParam(rawSlug);
   const t = getTranslations(locale);
   const isAr = locale === "ar";
 
@@ -23,7 +24,10 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
 
   try {
     const item = await db.announcement.findFirst({
-      where: { slug, isPublished: true },
+      where: {
+        isPublished: true,
+        OR: [{ slug }, { id: slug }],
+      },
     });
     if (item) {
       title = isAr ? item.titleAr ?? item.title : item.title;
@@ -36,7 +40,7 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
 
   if (!title) {
     const announcements = await getPublishedAnnouncements();
-    const fallback = announcements.find((a) => a.slug === slug);
+    const fallback = announcements.find((a) => a.slug === slug || a.id === slug);
     if (!fallback) notFound();
     title = getLocalizedField(fallback, "title", locale);
     content = getLocalizedField(fallback, "excerpt", locale);

@@ -6,6 +6,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function slugify(text: string): string {
+  const ascii = slugifyAscii(text);
+  if (ascii) return ascii;
+
   const slug = text
     .toLowerCase()
     .trim()
@@ -13,6 +16,35 @@ export function slugify(text: string): string {
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug || `item-${Date.now()}`;
+}
+
+/** URL-safe slug using Latin letters and numbers only (works on all hosts). */
+export function slugifyAscii(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Prefer ASCII slug in public URLs; fall back to id for Arabic-only slugs. */
+export function contentUrlSegment(item: { id: string; slug?: string | null }): string {
+  const slug = item.slug?.trim();
+  if (slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(slug)) {
+    return slug;
+  }
+  return item.id;
+}
+
+export function decodeRouteParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 export function resolveBilingualField(primary: string, fallback: string | null) {
