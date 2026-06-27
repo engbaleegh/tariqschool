@@ -52,30 +52,32 @@ export default async function BlogDetailPage({
     <>
       <HeroSection locale={typedLocale} title={title} compact />
       <section className="section-padding">
-        <div className="container-school max-w-3xl">
-          {date && (
-            <time dateTime={date} className="text-sm text-slate-500">
-              {formatDate(date, locale)}
-            </time>
-          )}
+        <div className="container-school">
+          <div className="mx-auto max-w-3xl">
+            {date && (
+              <time dateTime={date} className="text-sm text-slate-500">
+                {formatDate(date, locale)}
+              </time>
+            )}
+          </div>
+
           {featuredImage && (
-            <figure className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+            <figure className="mx-auto mt-6 w-full max-w-5xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={featuredImage}
-                alt={title}
-                className="mx-auto block h-auto w-full max-w-full object-contain"
-                loading="eager"
-              />
+              <img src={featuredImage} alt={title} className="blog-featured-image" loading="eager" />
             </figure>
           )}
-          <div className="prose-school mt-6 whitespace-pre-wrap">{content}</div>
-          <Link
-            href={localePath(typedLocale, Routes.BLOG)}
-            className="mt-8 inline-flex text-sm font-medium text-blue-800 hover:underline"
-          >
-            ← {t.backTo} {t.blog}
-          </Link>
+
+          <div className="prose-school mx-auto mt-6 max-w-3xl whitespace-pre-wrap">{content}</div>
+
+          <div className="mx-auto max-w-3xl">
+            <Link
+              href={localePath(typedLocale, Routes.BLOG)}
+              className="mt-8 inline-flex text-sm font-medium text-blue-800 hover:underline"
+            >
+              ← {t.backTo} {t.blog}
+            </Link>
+          </div>
         </div>
       </section>
     </>

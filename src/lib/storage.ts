@@ -30,6 +30,8 @@ export type BlobUploadOptions = {
   heroCover?: boolean;
   /** Skip image optimization (upload raw bytes) */
   raw?: boolean;
+  /** Resize to fit inside bounds without cropping (blog/article images) */
+  contentImage?: boolean;
 };
 
 export function detectResultFileType(mimeType: string): "PDF" | "IMAGE" {
@@ -101,6 +103,19 @@ async function optimizeImage(buffer: Buffer, width: number): Promise<Buffer> {
     .toBuffer();
 }
 
+async function optimizeContentImage(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer)
+    .rotate()
+    .resize({
+      width: 2400,
+      height: 2400,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 90 })
+    .toBuffer();
+}
+
 async function optimizeHeroCover(buffer: Buffer): Promise<Buffer> {
   return sharp(buffer)
     .rotate()
@@ -164,6 +179,17 @@ export async function storeFileDetailed(
   if (options.heroCover) {
     const optimized = await optimizeHeroCover(input);
     const blob = await uploadBuffer(optimized, `${folder}/${timestamp}-${baseName}-hero.webp`, "image/webp");
+    return {
+      url: blob.url,
+      pathname: blob.pathname,
+      mimeType: "image/webp",
+      size: optimized.length,
+    };
+  }
+
+  if (options.contentImage) {
+    const optimized = await optimizeContentImage(input);
+    const blob = await uploadBuffer(optimized, `${folder}/${timestamp}-${baseName}-full.webp`, "image/webp");
     return {
       url: blob.url,
       pathname: blob.pathname,

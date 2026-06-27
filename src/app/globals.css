@@ -72,6 +72,13 @@
   .prose-school {
     @apply max-w-none text-base leading-relaxed text-slate-700 dark:text-slate-300;
   }
+
+  .blog-featured-image {
+    @apply mx-auto block w-full max-w-full rounded-xl border border-slate-200 bg-slate-50;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+  }
 }
 
 @layer utilities {

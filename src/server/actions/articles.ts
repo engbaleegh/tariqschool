@@ -66,7 +66,7 @@ async function parseFeaturedImage(formData: FormData, existing?: string | null) 
     const mime = resolveMimeType(file);
     if (!isAllowedImage(mime)) throw new StorageError("invalid-image");
     if (featuredImage) await deleteBlobUrl(featuredImage);
-    const stored = await storeFileDetailed(file, "articles");
+    const stored = await storeFileDetailed(file, "articles", { contentImage: true });
     featuredImage = stored.url;
   }
   return featuredImage;

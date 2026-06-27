@@ -125,7 +125,7 @@ export function ArticleForm({ locale, mode, articleId, defaultValues }: ArticleF
               <img
                 src={defaultValues.featuredImage}
                 alt=""
-                className="h-32 w-auto rounded-lg border border-slate-200 object-cover"
+                className="max-h-64 w-auto max-w-full rounded-lg border border-slate-200 object-contain"
               />
               <label className="flex items-center gap-2 text-sm text-slate-600">
                 <input name="removeFeaturedImage" type={InputTypes.CHECKBOX} />
