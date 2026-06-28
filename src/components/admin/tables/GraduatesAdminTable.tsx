@@ -4,8 +4,16 @@ import Link from "next/link";
 import DataTable from "@/components/admin/DataTable";
 import { DeleteGraduateButton } from "@/components/admin/DeleteGraduateButton";
 import { ToggleGraduateButton } from "@/components/admin/ToggleGraduateButton";
+import { ToggleGraduateHomepageButton } from "@/components/admin/ToggleGraduateHomepageButton";
 
-type Row = { id: string; name: string; status: string; home: string; order: number; isActive: boolean };
+type Row = {
+  id: string;
+  name: string;
+  status: string;
+  order: number;
+  isActive: boolean;
+  featuredOnHomepage: boolean;
+};
 
 type Props = {
   locale: string;
@@ -24,9 +32,21 @@ export function GraduatesAdminTable({ locale, base, data, emptyMessage }: Props)
       emptyMessage={emptyMessage}
       columns={[
         { key: "name", header: isAr ? "الاسم" : "Name", className: "w-[24%]" },
-        { key: "home", header: isAr ? "الرئيسية" : "Homepage", className: "w-[12%]" },
-        { key: "order", header: isAr ? "الترتيب" : "Order", className: "w-[10%]" },
-        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[12%]" },
+        { key: "order", header: isAr ? "الترتيب" : "Order", className: "w-[8%]" },
+        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[10%]" },
+        {
+          key: "home",
+          header: isAr ? "الرئيسية" : "Homepage",
+          className: "w-[14%]",
+          sortable: false,
+          render: (row) => (
+            <ToggleGraduateHomepageButton
+              id={row.id as string}
+              locale={locale}
+              featuredOnHomepage={row.featuredOnHomepage as boolean}
+            />
+          ),
+        },
         {
           key: "actions",
           header: isAr ? "إجراءات" : "Actions",

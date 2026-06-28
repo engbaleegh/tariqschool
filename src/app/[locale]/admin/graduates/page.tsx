@@ -5,10 +5,14 @@ import { Routes } from "@/constants/enums";
 import { db } from "@/lib/prisma";
 import { getLocalizedField } from "@/lib/utils";
 
-type PageProps = { params: Promise<{ locale: Locale }> };
+type PageProps = {
+  params: Promise<{ locale: Locale }>;
+  searchParams?: Promise<{ error?: string }>;
+};
 
-export default async function AdminGraduatesPage({ params }: PageProps) {
+export default async function AdminGraduatesPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
+  const query = (await searchParams) ?? {};
   const isAr = locale === "ar";
   const base = `/${locale}/${Routes.ADMIN}/${Routes.GRADUATES}`;
 
@@ -16,9 +20,9 @@ export default async function AdminGraduatesPage({ params }: PageProps) {
     id: string;
     name: string;
     status: string;
-    home: string;
     order: number;
     isActive: boolean;
+    featuredOnHomepage: boolean;
   }[] = [];
 
   try {
@@ -27,9 +31,9 @@ export default async function AdminGraduatesPage({ params }: PageProps) {
       id: item.id,
       name: getLocalizedField(item, "name", locale),
       status: item.isActive ? (isAr ? "نشط" : "Active") : isAr ? "غير نشط" : "Inactive",
-      home: item.featuredOnHomepage ? (isAr ? "نعم" : "Yes") : isAr ? "لا" : "No",
       order: item.order,
       isActive: item.isActive,
+      featuredOnHomepage: item.featuredOnHomepage,
     }));
   } catch {
     rows = [];
@@ -41,11 +45,16 @@ export default async function AdminGraduatesPage({ params }: PageProps) {
         title={isAr ? "الخريجون" : "Graduates"}
         description={
           isAr
-            ? "إدارة الخريجين المعروضين في الموقع"
-            : "Manage graduates displayed on the public website"
+            ? "اختر حتى 3 خريجين للعرض في الصفحة الرئيسية"
+            : "Choose up to 3 graduates to feature on the homepage"
         }
         action={{ label: isAr ? "إضافة خريج" : "Add graduate", href: `${base}/new` }}
       />
+      {query.error === "homepage-limit" && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {isAr ? "يمكن عرض 3 خريجين فقط في الصفحة الرئيسية" : "Only 3 graduates can appear on the homepage"}
+        </p>
+      )}
       <GraduatesAdminTable
         locale={locale}
         base={base}

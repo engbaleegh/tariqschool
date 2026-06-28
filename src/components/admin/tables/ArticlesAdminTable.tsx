@@ -22,13 +22,13 @@ export function ArticlesAdminTable({ locale, base, data, emptyMessage }: Props) 
       data={data}
       emptyMessage={emptyMessage}
       columns={[
-        { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[40%]" },
-        { key: "date", header: isAr ? "التاريخ" : "Date", className: "w-[20%]" },
-        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[15%]" },
+        { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[36%]" },
+        { key: "date", header: isAr ? "التاريخ" : "Date", className: "w-[18%]" },
+        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[14%]" },
         {
           key: "actions",
           header: isAr ? "إجراءات" : "Actions",
-          className: "w-[15%]",
+          className: "w-[24%]",
           sortable: false,
           render: (row) => (
             <div className="flex flex-wrap items-center gap-3">

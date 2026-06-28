@@ -75,45 +75,28 @@
 
   .blog-featured-image {
     @apply mx-auto block w-full rounded-xl border border-slate-200 bg-slate-50 shadow-sm;
+    max-width: 42rem;
+    max-height: 28rem;
     height: auto;
-    max-height: min(420px, 55vh);
     object-fit: contain;
   }
 
-  .quick-link-card {
-    @apply card flex flex-col items-center gap-3 p-4 text-center text-blue-900 transition-all duration-300;
+  .home-quick-link {
+    @apply card flex flex-col items-center gap-3 p-5 text-center text-slate-700 transition-all duration-300;
+    @apply hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg hover:text-blue-900;
   }
 
-  .quick-link-card:hover {
-    @apply -translate-y-1 border-blue-300 shadow-lg;
+  .home-quick-link-icon {
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-emerald-50 text-blue-800 shadow-sm;
+    @apply transition-all duration-300 group-hover:scale-110 group-hover:from-blue-100 group-hover:to-emerald-100;
   }
 
-  .quick-link-icon {
-    @apply flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-emerald-50 text-blue-800 shadow-sm transition-all duration-300;
-  }
-
-  .quick-link-card:hover .quick-link-icon {
-    @apply scale-110 from-blue-100 to-emerald-100 text-emerald-700;
-  }
-
-  .admin-module-card {
-    @apply flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-700 transition-all duration-300;
-  }
-
-  .admin-module-card:hover {
-    @apply -translate-y-1 border-indigo-200 bg-indigo-50 text-indigo-800 shadow-md;
-  }
-
-  .admin-module-icon {
-    @apply flex h-11 w-11 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200 transition-transform duration-300;
-  }
-
-  .admin-module-card:hover .admin-module-icon {
-    @apply scale-110 bg-indigo-600 text-white ring-indigo-500;
+  .home-card {
+    @apply card;
   }
 
   .admin-stat-card:hover .admin-stat-icon {
-    @apply scale-110 bg-indigo-600 text-white;
+    @apply scale-110 bg-indigo-100 text-indigo-700 shadow-sm;
   }
 }
 

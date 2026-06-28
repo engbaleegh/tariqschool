@@ -11,6 +11,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 const GRADUATE_FORM_KEYS = ["name", "nameAr", "biography", "biographyAr"];
+const MAX_HOMEPAGE_GRADUATES = 3;
+
+async function assertHomepageGraduateLimit(featuredOnHomepage: boolean, excludeId?: string) {
+  if (!featuredOnHomepage) return;
+
+  const count = await db.graduate.count({
+    where: {
+      featuredOnHomepage: true,
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+  });
+
+  if (count >= MAX_HOMEPAGE_GRADUATES) {
+    throw new Error("homepage-limit");
+  }
+}
 
 async function parseGraduateForm(formData: FormData) {
   const name = resolveBilingualField(
@@ -38,8 +54,8 @@ async function parseGraduateForm(formData: FormData) {
     biographyAr: String(formData.get("biographyAr") ?? "").trim() || null,
     photo,
     order: Number(formData.get("order") ?? 0) || 0,
-    featuredOnHomepage: formData.get("featuredOnHomepage") === "on",
     isActive: formData.get("isActive") === "on",
+    featuredOnHomepage: formData.get("featuredOnHomepage") === "on",
   };
 }
 
@@ -73,6 +89,8 @@ export async function createGraduate(
       );
     }
 
+    await assertHomepageGraduateLimit(data.featuredOnHomepage);
+
     const graduate = await db.graduate.create({ data });
     await createAuditLog({
       action: "CREATE",
@@ -86,6 +104,20 @@ export async function createGraduate(
     revalidatePath(`/${locale}`);
     return { ok: true };
   } catch (error) {
+    if (error instanceof Error && error.message === "homepage-limit") {
+      return withFormValues(
+        {
+          ok: false,
+          error: t(
+            locale,
+            "يمكن عرض 3 خريجين فقط في الصفحة الرئيسية",
+            "Only 3 graduates can appear on the homepage"
+          ),
+        },
+        formData,
+        GRADUATE_FORM_KEYS
+      );
+    }
     if (error instanceof StorageError) {
       return withFormValues(
         {
@@ -139,6 +171,8 @@ export async function updateGraduate(
       );
     }
 
+    await assertHomepageGraduateLimit(data.featuredOnHomepage, id);
+
     const graduate = await db.graduate.update({ where: { id }, data });
     await createAuditLog({
       action: "UPDATE",
@@ -152,6 +186,20 @@ export async function updateGraduate(
     revalidatePath(`/${locale}`);
     return { ok: true };
   } catch (error) {
+    if (error instanceof Error && error.message === "homepage-limit") {
+      return withFormValues(
+        {
+          ok: false,
+          error: t(
+            locale,
+            "يمكن عرض 3 خريجين فقط في الصفحة الرئيسية",
+            "Only 3 graduates can appear on the homepage"
+          ),
+        },
+        formData,
+        GRADUATE_FORM_KEYS
+      );
+    }
     if (error instanceof StorageError) {
       return withFormValues(
         {
@@ -190,4 +238,23 @@ export async function toggleGraduateActive(id: string, locale: string, isActive:
   revalidatePath(`/${locale}/admin/graduates`);
   revalidatePath(`/${locale}/graduates`);
   revalidatePath(`/${locale}`);
+}
+
+export async function toggleGraduateHomepage(id: string, locale: string, featuredOnHomepage: boolean) {
+  await assertAdminSession();
+
+  try {
+    if (featuredOnHomepage) {
+      await assertHomepageGraduateLimit(true, id);
+    }
+    await db.graduate.update({ where: { id }, data: { featuredOnHomepage } });
+    revalidatePath(`/${locale}/admin/graduates`);
+    revalidatePath(`/${locale}/graduates`);
+    revalidatePath(`/${locale}`);
+  } catch (error) {
+    if (error instanceof Error && error.message === "homepage-limit") {
+      redirect(`/${locale}/admin/graduates?error=homepage-limit`);
+    }
+    throw error;
+  }
 }

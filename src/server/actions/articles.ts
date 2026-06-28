@@ -233,10 +233,9 @@ export async function updateArticle(
   }
 }
 
-export async function deleteArticleAction(
-  id: string,
-  locale: string
-): Promise<{ ok: true } | { ok: false; error: string }> {
+export type DeleteArticleResult = { ok: true } | { ok: false; error: string };
+
+export async function deleteArticleAction(id: string, locale: string): Promise<DeleteArticleResult> {
   const isAr = locale === "ar";
   try {
     await assertAdminSession();
@@ -247,6 +246,7 @@ export async function deleteArticleAction(
   try {
     const article = await db.article.findUnique({ where: { id } });
     if (article?.featuredImage) {
+      const { deleteBlobUrl } = await import("@/lib/storage");
       await deleteBlobUrl(article.featuredImage);
     }
     await db.article.delete({ where: { id } });

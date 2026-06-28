@@ -33,7 +33,7 @@ export default function Footer({ locale }: { locale: Locale }) {
           <ul className="mt-3 space-y-2">
             {quickLinks.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="text-sm hover:text-white">
+                <Link href={link.href} className="text-sm transition-colors duration-200 hover:translate-x-0.5 hover:text-white">
                   {link.label}
                 </Link>
               </li>

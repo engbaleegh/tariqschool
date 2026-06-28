@@ -107,10 +107,17 @@ export async function updateAnnouncement(
   }
 }
 
-export async function deleteAnnouncementAction(
-  id: string,
-  locale: string
-): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function deleteAnnouncement(id: string, locale: string) {
+  await db.announcement.delete({ where: { id } });
+  await createAuditLog({ action: "DELETE", entity: "Announcement", entityId: id });
+  revalidatePath(`/${locale}/admin/announcements`);
+  revalidatePath(`/${locale}/announcements`);
+  revalidatePath(`/${locale}`);
+}
+
+export type DeleteAnnouncementResult = { ok: true } | { ok: false; error: string };
+
+export async function deleteAnnouncementAction(id: string, locale: string): Promise<DeleteAnnouncementResult> {
   const isAr = locale === "ar";
   try {
     await assertAdminSession();
@@ -119,11 +126,7 @@ export async function deleteAnnouncementAction(
   }
 
   try {
-    await db.announcement.delete({ where: { id } });
-    await createAuditLog({ action: "DELETE", entity: "Announcement", entityId: id });
-    revalidatePath(`/${locale}/admin/announcements`);
-    revalidatePath(`/${locale}/announcements`);
-    revalidatePath(`/${locale}`);
+    await deleteAnnouncement(id, locale);
     return { ok: true };
   } catch (error) {
     console.error("deleteAnnouncementAction:", error);

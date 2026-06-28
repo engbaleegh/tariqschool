@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   BarChart3,
   Download,
@@ -26,11 +25,12 @@ import {
   getPublishedEvents,
   getPublishedResults,
   getHomepageGraduates,
-  getActiveGraduatesCount,
+  getActiveGraduateCount,
 } from "@/lib/db-content";
 import { getHeroCoverImage } from "@/lib/school-settings";
 import { HomeResultsSection } from "@/components/public/ResultsList";
 import { HomeGraduatesSection } from "@/components/public/HomeGraduatesSection";
+import { QuickLinkCard } from "@/components/public/QuickLinkCard";
 
 const quickLinkIcons: Record<string, LucideIcon> = {
   results: BarChart3,
@@ -51,15 +51,15 @@ export default async function HomePage({
   const t = getTranslations(typedLocale);
   const isAr = locale === "ar";
 
-  const [dbAnnouncements, dbEvents, coverImage, publishedResults, homepageGraduates, graduatesTotal] =
+  const [dbAnnouncements, dbEvents, coverImage, publishedResults, homepageGraduates, graduateCount] =
     await Promise.all([
-    getPublishedAnnouncements(),
-    getPublishedEvents(),
-    getHeroCoverImage(),
-    getPublishedResults(),
-    getHomepageGraduates(),
-    getActiveGraduatesCount(),
-  ]);
+      getPublishedAnnouncements(),
+      getPublishedEvents(),
+      getHeroCoverImage(),
+      getPublishedResults(),
+      getHomepageGraduates(),
+      getActiveGraduateCount(),
+    ]);
 
   const quickLinks = [
     { key: "results", label: t.results, href: localePath(typedLocale, Routes.RESULTS) },
@@ -139,21 +139,10 @@ export default async function HomePage({
       <section className="section-padding bg-slate-50 dark:bg-slate-900/50">
         <div className="container-school">
           <SectionHeading title={t.quickLinks} />
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {quickLinks.map((link) => {
               const Icon = quickLinkIcons[link.key];
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="quick-link-card group"
-                >
-                  <span className="quick-link-icon">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <span className="text-xs font-medium leading-snug sm:text-sm">{link.label}</span>
-                </Link>
-              );
+              return <QuickLinkCard key={link.href} href={link.href} label={link.label} icon={Icon} />;
             })}
           </div>
         </div>
@@ -168,7 +157,7 @@ export default async function HomePage({
       <HomeGraduatesSection
         locale={typedLocale}
         graduates={homepageGraduates}
-        totalCount={graduatesTotal}
+        totalCount={graduateCount}
       />
 
       <section className="section-padding">

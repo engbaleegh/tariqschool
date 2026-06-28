@@ -35,8 +35,8 @@ export default async function EditGraduatePage({ params }: PageProps) {
           biography: graduate.biography ?? undefined,
           biographyAr: graduate.biographyAr ?? undefined,
           photo: graduate.photo,
-          featuredOnHomepage: graduate.featuredOnHomepage,
           isActive: graduate.isActive,
+          featuredOnHomepage: graduate.featuredOnHomepage,
           order: graduate.order,
         }}
       />

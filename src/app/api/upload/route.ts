@@ -6,7 +6,6 @@ import { isAdminRole } from "@/lib/permissions";
 import { UserRole } from "@/generated/prisma";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { db } from "@/lib/prisma";
-import { getAdminLastActivityMs, isAdminIdleExpired, touchAdminActivity } from "@/lib/admin-session";
 
 const MAX_SIZE = 25 * 1024 * 1024;
 
@@ -15,12 +14,6 @@ export async function POST(request: NextRequest) {
   if (!session?.user || !isAdminRole(session.user.role as UserRole)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const lastActivity = await getAdminLastActivityMs();
-  if (lastActivity !== null && isAdminIdleExpired(lastActivity)) {
-    return NextResponse.json({ error: "Session expired" }, { status: 401 });
-  }
-  await touchAdminActivity();
 
   const ip = getClientIp(request);
   const { success } = rateLimit(`upload:${ip}`, 30, 60_000);

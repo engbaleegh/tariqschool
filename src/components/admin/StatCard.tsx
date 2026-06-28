@@ -44,7 +44,7 @@ export default function StatCard({
           )}
         </div>
         {icon && (
-          <div className="admin-stat-icon flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <div className="admin-stat-icon flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-all duration-300">
             {icon}
           </div>
         )}
@@ -52,19 +52,19 @@ export default function StatCard({
     </>
   );
 
-  const classes = cn(
-    "admin-stat-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300",
-    href && "hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md",
+  const cardClass = cn(
+    "rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300",
+    href && "admin-stat-card group cursor-pointer hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md",
     className
   );
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link href={href} className={cardClass}>
         {content}
       </Link>
     );
   }
 
-  return <div className={classes}>{content}</div>;
+  return <div className={cardClass}>{content}</div>;
 }

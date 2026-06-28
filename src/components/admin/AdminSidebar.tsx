@@ -2,23 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
-import {
-  BarChart3,
-  BookOpen,
-  Calendar,
-  Download,
-  FileText,
-  GraduationCap,
-  Home,
-  Images,
-  Mail,
-  Megaphone,
-  Settings,
-  Shield,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
 import { Routes } from "@/constants/enums";
 import { adminNavItems, getAdminNavLabel } from "@/constants/admin-nav";
 import { cn } from "@/lib/utils";
@@ -27,25 +10,6 @@ type AdminSidebarProps = {
   locale: string;
   open: boolean;
   onClose: () => void;
-};
-
-const segmentIcons: Record<string, LucideIcon> = {
-  "": Home,
-  homepage: Home,
-  [Routes.TEACHERS]: Users,
-  [Routes.GRADUATES]: GraduationCap,
-  [Routes.ANNOUNCEMENTS]: Megaphone,
-  articles: BookOpen,
-  events: Calendar,
-  [Routes.GALLERY]: Images,
-  [Routes.RESULTS]: BarChart3,
-  [Routes.DOWNLOADS]: Download,
-  [Routes.CALENDAR]: Calendar,
-  media: Images,
-  users: Shield,
-  messages: Mail,
-  "audit-logs": FileText,
-  settings: Settings,
 };
 
 function adminHref(locale: string, segment?: string) {
@@ -78,7 +42,9 @@ export default function AdminSidebar({ locale, open, onClose }: AdminSidebarProp
       <aside
         className={cn(
           "fixed inset-y-0 z-50 flex w-64 flex-col border-slate-200 bg-white transition-transform duration-200 lg:translate-x-0",
-          isAr ? "right-0 border-l lg:translate-x-0" : "left-0 border-r",
+          isAr
+            ? "right-0 border-l lg:translate-x-0"
+            : "left-0 border-r",
           open
             ? "translate-x-0"
             : isAr
@@ -94,7 +60,9 @@ export default function AdminSidebar({ locale, open, onClose }: AdminSidebarProp
             <p className="text-sm font-semibold text-slate-900">
               {isAr ? "مدرسة طارق" : "Tariq School"}
             </p>
-            <p className="text-xs text-slate-500">{isAr ? "لوحة الإدارة" : "Admin Panel"}</p>
+            <p className="text-xs text-slate-500">
+              {isAr ? "لوحة الإدارة" : "Admin Panel"}
+            </p>
           </div>
         </div>
 
@@ -104,7 +72,6 @@ export default function AdminSidebar({ locale, open, onClose }: AdminSidebarProp
               const href = adminHref(locale, item.segment || undefined);
               const active = isActive(pathname, href, item.segment);
               const label = getAdminNavLabel(item, locale);
-              const Icon = segmentIcons[item.segment] ?? FileText;
 
               return (
                 <li key={item.segment || "dashboard"}>
@@ -112,22 +79,13 @@ export default function AdminSidebar({ locale, open, onClose }: AdminSidebarProp
                     href={href}
                     onClick={onClose}
                     className={cn(
-                      "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       active
-                        ? "bg-indigo-50 text-indigo-700 shadow-sm"
+                        ? "bg-indigo-50 text-indigo-700"
                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     )}
                   >
-                    <span
-                      className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
-                        active
-                          ? "bg-indigo-600 text-white"
-                          : "bg-slate-100 text-slate-500 group-hover:scale-105 group-hover:bg-indigo-100 group-hover:text-indigo-700"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" aria-hidden />
-                    </span>
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-current opacity-40" aria-hidden />
                     {label}
                   </Link>
                 </li>
@@ -136,24 +94,21 @@ export default function AdminSidebar({ locale, open, onClose }: AdminSidebarProp
           </ul>
         </nav>
 
-        <div className="space-y-2 border-t border-slate-200 p-4">
+        <div className="border-t border-slate-200 p-4">
           <Link
             href={`/${locale}`}
-            className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900"
           >
-            <Home className="h-4 w-4" aria-hidden />
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d={isAr ? "M14 5l7 7m0 0l-7 7m7-7H3" : "M10 19l-7-7m0 0l7-7m-7 7h18"}
+              />
+            </svg>
             {isAr ? "عرض الموقع" : "View site"}
           </Link>
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: `/${locale}/auth/signin` })}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {isAr ? "تسجيل الخروج" : "Sign out"}
-          </button>
         </div>
       </aside>
     </>

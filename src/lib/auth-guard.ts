@@ -4,10 +4,6 @@ import { UserRole } from "@/generated/prisma";
 import { hasPermission, Permission, isAdminRole } from "@/lib/permissions";
 import { db } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import {
-  getAdminLastActivityMs,
-  isAdminIdleExpired,
-} from "@/lib/admin-session";
 
 export async function requireAuth(locale: string) {
   const session = await getServerSession(authOptions);
@@ -21,11 +17,6 @@ export async function requireAdmin(locale: string) {
   const session = await requireAuth(locale);
   if (!isAdminRole(session.user.role)) {
     redirect(`/${locale}`);
-  }
-
-  const lastActivity = await getAdminLastActivityMs();
-  if (lastActivity !== null && isAdminIdleExpired(lastActivity)) {
-    redirect(`/${locale}/auth/signin?reason=session-expired`);
   }
 
   if (session.user.id === "bootstrap-admin") {

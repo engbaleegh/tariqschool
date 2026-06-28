@@ -22,13 +22,13 @@ export function AnnouncementsAdminTable({ locale, base, data, emptyMessage }: Pr
       data={data}
       emptyMessage={emptyMessage}
       columns={[
-        { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[40%]" },
-        { key: "date", header: isAr ? "التاريخ" : "Date", className: "w-[22%]" },
-        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[16%]" },
+        { key: "title", header: isAr ? "العنوان" : "Title", className: "w-[36%]" },
+        { key: "date", header: isAr ? "التاريخ" : "Date", className: "w-[18%]" },
+        { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[14%]" },
         {
           key: "actions",
           header: isAr ? "إجراءات" : "Actions",
-          className: "w-[18%]",
+          className: "w-[24%]",
           sortable: false,
           render: (row) => (
             <div className="flex flex-wrap items-center gap-3">
