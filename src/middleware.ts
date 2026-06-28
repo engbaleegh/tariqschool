@@ -6,6 +6,12 @@ import { getToken } from "next-auth/jwt";
 import { i18n, type Locale } from "./i18n.config";
 import { Routes } from "./constants/enums";
 import { isAdminRole } from "@/lib/roles";
+import {
+  ADMIN_IDLE_SECONDS,
+  ADMIN_LAST_ACTIVITY_COOKIE,
+  clearAuthCookies,
+  isAdminIdleExpired,
+} from "@/lib/admin-session";
 
 function getLocale(request: NextRequest): string {
   const negotiatorHeaders: Record<string, string> = {};
@@ -48,6 +54,32 @@ export async function middleware(request: NextRequest) {
 
   if (isAuth && isAdminPage && !isAdminRole(isAuth.role as string)) {
     return NextResponse.redirect(new URL(`/${currentLocale}`, request.url));
+  }
+
+  if (isAuth && isAdminPage && isAdminRole(isAuth.role as string)) {
+    const lastActivityRaw = request.cookies.get(ADMIN_LAST_ACTIVITY_COOKIE)?.value;
+    const now = Date.now();
+
+    if (lastActivityRaw) {
+      const lastActivity = Number(lastActivityRaw);
+      if (!Number.isNaN(lastActivity) && isAdminIdleExpired(lastActivity, now)) {
+        const signInUrl = new URL(`/${currentLocale}/${Routes.AUTH}/signin`, request.url);
+        signInUrl.searchParams.set("reason", "session-expired");
+        const response = NextResponse.redirect(signInUrl);
+        clearAuthCookies(response);
+        return response;
+      }
+    }
+
+    const response = NextResponse.next();
+    response.cookies.set(ADMIN_LAST_ACTIVITY_COOKIE, String(now), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: ADMIN_IDLE_SECONDS,
+      path: "/",
+    });
+    return response;
   }
 
   return NextResponse.next();

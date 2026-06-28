@@ -14,6 +14,7 @@ type SignInFormProps = {
 export function SignInForm({ locale }: SignInFormProps) {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? `/${locale}/admin`;
+  const sessionExpired = searchParams.get("reason") === "session-expired";
   const isAr = locale === "ar";
 
   const [email, setEmail] = useState("");
@@ -60,6 +61,16 @@ export function SignInForm({ locale }: SignInFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="card mx-auto max-w-md space-y-4 p-8">
+      {sessionExpired && (
+        <p
+          className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+          role="status"
+        >
+          {isAr
+            ? "انتهت جلستك بعد 10 دقائق من عدم النشاط. يرجى تسجيل الدخول مرة أخرى."
+            : "Your session expired after 10 minutes of inactivity. Please sign in again."}
+        </p>
+      )}
       <div>
         <label htmlFor="email" className="mb-1 block text-sm font-medium">
           {isAr ? "البريد الإلكتروني" : "Email"}

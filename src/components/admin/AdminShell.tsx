@@ -3,6 +3,7 @@
 import { useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
+import AdminSessionGuard from "@/components/admin/AdminSessionGuard";
 
 type AdminShellProps = {
   locale: string;
@@ -16,6 +17,7 @@ export default function AdminShell({ locale, userName, children }: AdminShellPro
 
   return (
     <div className="min-h-screen bg-slate-50" dir={isAr ? "rtl" : "ltr"}>
+      <AdminSessionGuard locale={locale} />
       <AdminSidebar
         locale={locale}
         open={sidebarOpen}
