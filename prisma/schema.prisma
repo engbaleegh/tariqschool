@@ -120,12 +120,14 @@ model Graduate {
   biography   String?  @db.Text
   biographyAr String?  @db.Text
   order       Int      @default(0)
+  featuredOnHomepage Boolean @default(false)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([isActive])
   @@index([order])
+  @@index([featuredOnHomepage])
 }
 
 // ─── Teachers ───────────────────────────────────────────────────────────────

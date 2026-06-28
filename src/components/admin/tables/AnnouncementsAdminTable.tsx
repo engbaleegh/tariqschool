@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import DataTable from "@/components/admin/DataTable";
+import { DeleteAnnouncementButton } from "@/components/admin/DeleteAnnouncementButton";
 
 type Row = { id: string; title: string; date: string; status: string };
 
@@ -30,12 +31,15 @@ export function AnnouncementsAdminTable({ locale, base, data, emptyMessage }: Pr
           className: "w-[18%]",
           sortable: false,
           render: (row) => (
-            <Link
-              href={`${base}/${row.id}/edit`}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-            >
-              {isAr ? "تعديل" : "Edit"}
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`${base}/${row.id}/edit`}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+              >
+                {isAr ? "تعديل" : "Edit"}
+              </Link>
+              <DeleteAnnouncementButton id={row.id as string} locale={locale} />
+            </div>
           ),
         },
       ]}

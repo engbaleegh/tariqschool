@@ -25,7 +25,8 @@ import {
   getPublishedAnnouncements,
   getPublishedEvents,
   getPublishedResults,
-  getActiveGraduates,
+  getHomepageGraduates,
+  getActiveGraduatesCount,
 } from "@/lib/db-content";
 import { getHeroCoverImage } from "@/lib/school-settings";
 import { HomeResultsSection } from "@/components/public/ResultsList";
@@ -50,12 +51,14 @@ export default async function HomePage({
   const t = getTranslations(typedLocale);
   const isAr = locale === "ar";
 
-  const [dbAnnouncements, dbEvents, coverImage, publishedResults, graduates] = await Promise.all([
+  const [dbAnnouncements, dbEvents, coverImage, publishedResults, homepageGraduates, graduatesTotal] =
+    await Promise.all([
     getPublishedAnnouncements(),
     getPublishedEvents(),
     getHeroCoverImage(),
     getPublishedResults(),
-    getActiveGraduates(),
+    getHomepageGraduates(),
+    getActiveGraduatesCount(),
   ]);
 
   const quickLinks = [
@@ -143,9 +146,9 @@ export default async function HomePage({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="card flex flex-col items-center gap-2 p-4 text-center transition hover:border-blue-300 hover:shadow-md"
+                  className="quick-link-card group"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-800">
+                  <span className="quick-link-icon">
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
                   <span className="text-xs font-medium leading-snug sm:text-sm">{link.label}</span>
@@ -162,7 +165,11 @@ export default async function HomePage({
         viewAllHref={localePath(typedLocale, Routes.RESULTS)}
       />
 
-      <HomeGraduatesSection locale={typedLocale} graduates={graduates} />
+      <HomeGraduatesSection
+        locale={typedLocale}
+        graduates={homepageGraduates}
+        totalCount={graduatesTotal}
+      />
 
       <section className="section-padding">
         <div className="container-school">

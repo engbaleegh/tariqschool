@@ -233,10 +233,29 @@ export async function updateArticle(
   }
 }
 
-export async function deleteArticle(id: string, locale: string) {
-  await assertAdminSession();
-  await db.article.delete({ where: { id } });
-  await createAuditLog({ action: "DELETE", entity: "Article", entityId: id });
-  revalidatePath(`/${locale}/admin/articles`);
-  revalidatePath(`/${locale}/blog`);
+export async function deleteArticleAction(
+  id: string,
+  locale: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const isAr = locale === "ar";
+  try {
+    await assertAdminSession();
+  } catch {
+    return { ok: false, error: isAr ? "غير مصرح" : "Unauthorized" };
+  }
+
+  try {
+    const article = await db.article.findUnique({ where: { id } });
+    if (article?.featuredImage) {
+      await deleteBlobUrl(article.featuredImage);
+    }
+    await db.article.delete({ where: { id } });
+    await createAuditLog({ action: "DELETE", entity: "Article", entityId: id });
+    revalidatePath(`/${locale}/admin/articles`);
+    revalidatePath(`/${locale}/blog`);
+    return { ok: true };
+  } catch (error) {
+    console.error("deleteArticleAction:", error);
+    return { ok: false, error: isAr ? "تعذر حذف المقال" : "Could not delete article" };
+  }
 }

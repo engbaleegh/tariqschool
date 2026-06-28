@@ -38,6 +38,7 @@ async function parseGraduateForm(formData: FormData) {
     biographyAr: String(formData.get("biographyAr") ?? "").trim() || null,
     photo,
     order: Number(formData.get("order") ?? 0) || 0,
+    featuredOnHomepage: formData.get("featuredOnHomepage") === "on",
     isActive: formData.get("isActive") === "on",
   };
 }

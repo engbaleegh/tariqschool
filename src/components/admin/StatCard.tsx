@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type StatCardProps = {
@@ -6,6 +7,7 @@ type StatCardProps = {
   change?: string;
   changeType?: "positive" | "negative" | "neutral";
   icon?: React.ReactNode;
+  href?: string;
   className?: string;
 };
 
@@ -15,6 +17,7 @@ export default function StatCard({
   change,
   changeType = "neutral",
   icon,
+  href,
   className,
 }: StatCardProps) {
   const changeColors = {
@@ -23,19 +26,12 @@ export default function StatCard({
     neutral: "text-slate-600 bg-slate-100",
   };
 
-  return (
-    <div
-      className={cn(
-        "rounded-xl border border-slate-200 bg-white p-5 shadow-sm",
-        className
-      )}
-    >
+  const content = (
+    <>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-            {value}
-          </p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
           {change && (
             <span
               className={cn(
@@ -48,11 +44,27 @@ export default function StatCard({
           )}
         </div>
         {icon && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="admin-stat-icon flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
             {icon}
           </div>
         )}
       </div>
-    </div>
+    </>
   );
+
+  const classes = cn(
+    "admin-stat-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300",
+    href && "hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md",
+    className
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={classes}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={classes}>{content}</div>;
 }

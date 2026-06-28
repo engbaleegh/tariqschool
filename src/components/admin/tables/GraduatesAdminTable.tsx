@@ -5,7 +5,7 @@ import DataTable from "@/components/admin/DataTable";
 import { DeleteGraduateButton } from "@/components/admin/DeleteGraduateButton";
 import { ToggleGraduateButton } from "@/components/admin/ToggleGraduateButton";
 
-type Row = { id: string; name: string; status: string; order: number; isActive: boolean };
+type Row = { id: string; name: string; status: string; home: string; order: number; isActive: boolean };
 
 type Props = {
   locale: string;
@@ -23,7 +23,8 @@ export function GraduatesAdminTable({ locale, base, data, emptyMessage }: Props)
       data={data}
       emptyMessage={emptyMessage}
       columns={[
-        { key: "name", header: isAr ? "الاسم" : "Name", className: "w-[30%]" },
+        { key: "name", header: isAr ? "الاسم" : "Name", className: "w-[24%]" },
+        { key: "home", header: isAr ? "الرئيسية" : "Homepage", className: "w-[12%]" },
         { key: "order", header: isAr ? "الترتيب" : "Order", className: "w-[10%]" },
         { key: "status", header: isAr ? "الحالة" : "Status", className: "w-[12%]" },
         {

@@ -18,6 +18,7 @@ type GraduateFormValues = {
   photo?: string | null;
   isActive?: boolean;
   order?: number;
+  featuredOnHomepage?: boolean;
 };
 
 type GraduateFormProps = {
@@ -131,6 +132,15 @@ export function GraduateForm({ locale, mode, graduateId, defaultValues }: Gradua
             className={inputClass}
           />
         </div>
+
+        <label className="flex items-center gap-2 text-sm sm:col-span-2">
+          <input
+            name="featuredOnHomepage"
+            type={InputTypes.CHECKBOX}
+            defaultChecked={defaultValues?.featuredOnHomepage ?? false}
+          />
+          {isAr ? "عرض في الصفحة الرئيسية (حد أقصى 3)" : "Show on homepage (max 3)"}
+        </label>
 
         <label className="flex items-center gap-2 text-sm sm:col-span-2">
           <input name="isActive" type={InputTypes.CHECKBOX} defaultChecked={defaultValues?.isActive ?? true} />

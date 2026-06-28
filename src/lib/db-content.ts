@@ -145,8 +145,51 @@ export async function getActiveGraduates() {
       biography: row.biography,
       biographyAr: row.biographyAr,
       photo: row.photo,
+      featuredOnHomepage: row.featuredOnHomepage,
     }));
   }, []);
+}
+
+export async function getHomepageGraduates() {
+  return safeQuery(async () => {
+    try {
+      const featured = await db.graduate.findMany({
+        where: { isActive: true, featuredOnHomepage: true },
+        orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+        take: 3,
+      });
+      if (featured.length) {
+        return featured.map((row) => ({
+          id: row.id,
+          name: row.name,
+          nameAr: row.nameAr ?? row.name,
+          biography: row.biography,
+          biographyAr: row.biographyAr,
+          photo: row.photo,
+        }));
+      }
+    } catch {
+      // Column may not exist until db push completes
+    }
+
+    const rows = await db.graduate.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      take: 3,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      nameAr: row.nameAr ?? row.name,
+      biography: row.biography,
+      biographyAr: row.biographyAr,
+      photo: row.photo,
+    }));
+  }, []);
+}
+
+export async function getActiveGraduatesCount() {
+  return safeQuery(async () => db.graduate.count({ where: { isActive: true } }), 0);
 }
 
 export async function getGalleryAlbums() {

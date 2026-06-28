@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
 import { slugify, slugifyAscii, resolveBilingualField } from "@/lib/utils";
 import { type FormActionState, t } from "@/lib/action-state";
+import { assertAdminSession } from "@/lib/action-auth";
 import { revalidatePath } from "next/cache";
 
 function parseAnnouncementForm(formData: FormData) {
@@ -106,10 +107,26 @@ export async function updateAnnouncement(
   }
 }
 
-export async function deleteAnnouncement(id: string, locale: string) {
-  await db.announcement.delete({ where: { id } });
-  await createAuditLog({ action: "DELETE", entity: "Announcement", entityId: id });
-  revalidatePath(`/${locale}/admin/announcements`);
-  revalidatePath(`/${locale}/announcements`);
-  revalidatePath(`/${locale}`);
+export async function deleteAnnouncementAction(
+  id: string,
+  locale: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const isAr = locale === "ar";
+  try {
+    await assertAdminSession();
+  } catch {
+    return { ok: false, error: isAr ? "غير مصرح" : "Unauthorized" };
+  }
+
+  try {
+    await db.announcement.delete({ where: { id } });
+    await createAuditLog({ action: "DELETE", entity: "Announcement", entityId: id });
+    revalidatePath(`/${locale}/admin/announcements`);
+    revalidatePath(`/${locale}/announcements`);
+    revalidatePath(`/${locale}`);
+    return { ok: true };
+  } catch (error) {
+    console.error("deleteAnnouncementAction:", error);
+    return { ok: false, error: isAr ? "تعذر حذف الإعلان" : "Could not delete announcement" };
+  }
 }

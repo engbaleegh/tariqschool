@@ -62,7 +62,7 @@ export default async function BlogDetailPage({
           </div>
 
           {featuredImage && (
-            <figure className="mx-auto mt-6 w-full max-w-5xl">
+            <figure className="mx-auto mt-6 max-w-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={featuredImage} alt={title} className="blog-featured-image" loading="eager" />
             </figure>

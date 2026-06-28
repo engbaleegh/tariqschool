@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import DataTable from "@/components/admin/DataTable";
+import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton";
 
 type Row = { id: string; title: string; date: string; status: string };
 
@@ -30,12 +31,15 @@ export function ArticlesAdminTable({ locale, base, data, emptyMessage }: Props) 
           className: "w-[15%]",
           sortable: false,
           render: (row) => (
-            <Link
-              href={`${base}/${row.id}/edit`}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-            >
-              {isAr ? "تعديل" : "Edit"}
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`${base}/${row.id}/edit`}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+              >
+                {isAr ? "تعديل" : "Edit"}
+              </Link>
+              <DeleteArticleButton id={row.id as string} locale={locale} />
+            </div>
           ),
         },
       ]}

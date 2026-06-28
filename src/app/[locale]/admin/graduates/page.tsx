@@ -16,6 +16,7 @@ export default async function AdminGraduatesPage({ params }: PageProps) {
     id: string;
     name: string;
     status: string;
+    home: string;
     order: number;
     isActive: boolean;
   }[] = [];
@@ -26,6 +27,7 @@ export default async function AdminGraduatesPage({ params }: PageProps) {
       id: item.id,
       name: getLocalizedField(item, "name", locale),
       status: item.isActive ? (isAr ? "نشط" : "Active") : isAr ? "غير نشط" : "Inactive",
+      home: item.featuredOnHomepage ? (isAr ? "نعم" : "Yes") : isAr ? "لا" : "No",
       order: item.order,
       isActive: item.isActive,
     }));

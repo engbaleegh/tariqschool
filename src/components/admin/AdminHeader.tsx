@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { Routes } from "@/constants/enums";
 
 type AdminHeaderProps = {
@@ -35,7 +36,7 @@ export default function AdminHeader({
         <h2 className="text-lg font-semibold text-slate-900">{displayTitle}</h2>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Link
           href={`/${locale}/${Routes.ADMIN}/messages`}
           className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
@@ -46,13 +47,19 @@ export default function AdminHeader({
           </svg>
         </Link>
 
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: `/${locale}/auth/signin` })}
+          className="hidden rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:inline-flex"
+        >
+          {isAr ? "تسجيل الخروج" : "Sign out"}
+        </button>
+
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-medium text-indigo-700">
             {userName.charAt(0).toUpperCase()}
           </div>
-          <span className="hidden text-sm font-medium text-slate-700 sm:inline">
-            {userName}
-          </span>
+          <span className="hidden text-sm font-medium text-slate-700 md:inline">{userName}</span>
         </div>
       </div>
     </header>
