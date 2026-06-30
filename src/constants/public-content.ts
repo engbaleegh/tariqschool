@@ -22,9 +22,9 @@ export const schoolInfo = {
     en: "56 years of educational excellence and community service",
     ar: "٥٦ عاماً من التميز التعليمي وخدمة المجتمع",
   },
-  phone: "+967773408338",
+  phone: "+967777818303",
   email: "info@tariq-school.com",
-  whatsapp: "967773408338",
+  whatsapp: "967777818303",
   address: {
     en: "Al-Maqatin, Ibb Governorate, Yemen",
     ar: "اليمن، محافظة إب، المقاطن",

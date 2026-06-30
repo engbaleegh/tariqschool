@@ -5,8 +5,6 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import type { Locale } from "@/i18n.config";
 import { InputTypes } from "@/constants/enums";
-import { BOOTSTRAP_ADMIN } from "@/constants/site";
-
 type SignInFormProps = {
   locale: Locale;
 };
@@ -93,11 +91,6 @@ export function SignInForm({ locale }: SignInFormProps) {
           {error}
         </p>
       )}
-      <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-        {isAr ? "بيانات الدخول الافتراضية:" : "Default login credentials:"}
-        <br />
-        {BOOTSTRAP_ADMIN.email} / {BOOTSTRAP_ADMIN.password}
-      </p>
       <button
         type="submit"
         disabled={loading}
